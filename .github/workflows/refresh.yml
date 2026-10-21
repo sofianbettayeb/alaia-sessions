@@ -1,0 +1,46 @@
+name: Refresh sessions
+
+on:
+  schedule:
+    # 05:00, 10:00, 15:00 UTC = 07:00, 12:00, 17:00 Swiss summer time (06:00, 11:00, 16:00 in winter).
+    - cron: "0 5,10,15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Scrape into a temp file so a failed run keeps the last good data.
+      - name: Scrape the booking site
+        run: |
+          python3 -I scrape_agenda.py --weeks 2 --details > agenda.json.tmp
+          mv agenda.json.tmp agenda.json
+
+      - name: Build the page
+        run: python3 -I build_view.py
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add agenda.json index.html
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Refresh sessions $(TZ=Europe/Zurich date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
