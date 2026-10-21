@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wave Sessions</title>
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --card: #ffffff;
+    --ink: #1c1d1f;
+    --muted: #63656a;
+    --line: #e3e1dc;
+    --soft: #efede8;
+    --quiet: #17703d;
+    --moderate: #8a5a00;
+    --busy: #b3261e;
+    --full: #8b8c90;
+    --accent: #0f5c8c;
+    --deal: #6a2fc0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 64px; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  a { color: var(--accent); }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+  .unofficial { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+  .freshness { display: grid; justify-items: end; gap: 6px; }
+  .stamp { color: var(--muted); font-size: 13px; text-align: right; }
+  .stamp.stale { color: var(--busy); }
+  .refresh { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+  .refresh:hover { border-color: #c9c6bf; }
+  .refresh:disabled { cursor: progress; color: var(--muted); }
+  .refresh-msg { font-size: 12px; color: var(--muted); max-width: 280px; text-align: right; }
+  .refresh-msg.error { color: var(--busy); }
+
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  section { margin-bottom: 32px; }
+
+  /* Profile summary + settings dialog */
+  .profile {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+  }
+  .profile .who { font-size: 14px; color: var(--muted); }
+  .profile .who b { color: var(--ink); font-weight: 600; }
+  .profile .edit { margin-left: auto; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 14px; font-size: 14px; cursor: pointer; }
+  .profile .edit:hover { border-color: #c9c6bf; }
+  dialog { border: 0; border-radius: 14px; padding: 0; width: min(720px, 92vw); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
+  dialog::backdrop { background: rgba(28,29,31,.35); }
+  dialog form { padding: 24px 28px; display: grid; gap: 18px; }
+  dialog h3 { margin: 0; font-size: 20px; }
+  dialog .hint { margin: 4px 0 0; }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+  legend { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; padding: 0; margin-bottom: 8px; }
+  fieldset .seg { justify-self: start; }
+  .filter-grid { display: grid; grid-template-columns: 56px auto; gap: 10px 8px; align-items: center; justify-content: start; }
+  .filter-grid .seg { justify-self: start; }
+  .filters { font-size: 13px; color: var(--muted); }
+  .filters b { color: var(--ink); font-weight: 600; }
+  .weekdays { display: flex; gap: 6px; }
+  .weekdays button { width: 52px; padding: 7px 0; border: 1px solid var(--line); background: var(--card); border-radius: 8px; font-size: 13px; cursor: pointer; color: var(--muted); }
+  .weekdays button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
+  .subhead { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+  .pref { font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 8px; }
+  .actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
+  .blocked { font-size: 13px; color: var(--busy); }
+  .primary { background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Level ladder inside settings */
+  .ladder { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rung {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer; font-size: 14px;
+  }
+  .rung .step { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rung[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+  .rung[aria-pressed="false"] { color: var(--muted); }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 13px; font-weight: 650;
+    background: var(--lvl); color: var(--lvl-ink); border: 1px solid rgba(0,0,0,.28); white-space: nowrap;
+  }
+  .rung .pill { font-size: 12px; padding: 1px 7px; }
+
+  /* Best picks */
+  .picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pick {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+    display: grid; gap: 10px; align-content: start;
+  }
+  .pick .when { font-size: 18px; font-weight: 650; }
+  .pick .meta { color: var(--muted); font-size: 13px; }
+  .pick .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pick .book { white-space: nowrap; }
+  .pick .book { font-size: 14px; font-weight: 600; text-decoration: none; }
+  .pick .book:hover { text-decoration: underline; }
+
+  .crowd { display: grid; gap: 4px; }
+  .crowd .lbl { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; white-space: nowrap; }
+  .crowd .lbl span { color: var(--muted); font-size: 12px; }
+  .crowd .lbl b { font-weight: 650; }
+  .meter { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 4px; }
+
+  .price { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .price.unknown { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .tag.deal { color: var(--deal); background: #f3edfc; font-weight: 600; }
+  .tag.free { color: var(--accent); }
+  .tag.kind { color: var(--muted); }
+
+  /* Toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
+  .seg button { border: 0; background: none; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .seg-label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+  label.check { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .count { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+  /* Session table */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 10px 14px; background: #faf9f6; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 14px; }
+  tr:last-child td { border-bottom: 0; }
+  tr.day td { background: #faf9f6; font-weight: 650; font-size: 14px; padding-top: 14px; }
+  tr.day td span { font-weight: 400; color: var(--muted); margin-left: 8px; font-size: 13px; }
+  tr.full td { color: var(--full); }
+  tr.full .pill { opacity: .55; }
+  td.time { font-variant-numeric: tabular-nums; font-weight: 600; width: 130px; white-space: nowrap; }
+  td.bookcell a { white-space: nowrap; }
+  td.crowdcell { width: 240px; }
+  td.crowdcell .crowd { max-width: 220px; }
+  td.pricecell { width: 210px; }
+  td.bookcell { width: 70px; text-align: right; }
+  .empty { padding: 28px; text-align: center; color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; }
+  .empty button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 5px 12px; margin-left: 6px; cursor: pointer; }
+
+  footer { color: var(--muted); font-size: 12px; margin-top: 28px; line-height: 1.6; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Alaïa Bay sessions</h1>
+      <p class="unofficial">Unofficial view, not affiliated with Alaïa Bay. Always confirm on the
+        <a href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">official booking site</a>.</p>
+    </div>
+    <div class="freshness">
+      <div class="stamp" id="stamp"></div>
+      <button class="refresh" id="refresh" type="button" hidden>Refresh data</button>
+      <div class="refresh-msg" id="refreshMsg" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <div class="profile" id="profile"></div>
+
+  <dialog id="settings" aria-labelledby="h-settings">
+    <form method="dialog">
+      <h3 id="h-settings">Settings</h3>
+      <p class="hint">Saved in this browser. Change them any time from the Settings button.</p>
+
+      <fieldset>
+        <legend>Who is surfing?</legend>
+        <div class="seg" data-setting="surfer">
+          <button type="button" data-v="adult">Adult</button><button type="button" data-v="kid">Kid</button>
+        </div>
+        <p class="hint">Prices show the kid rate when available.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Your levels</legend>
+        <div class="ladder" id="ladder"></div>
+        <p class="hint">Pick 1 or more. Sessions at other levels are hidden.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>What matters most when picking a session?</legend>
+        <div class="seg" data-setting="priority">
+          <button type="button" data-v="crowd">Fewest people</button><button type="button" data-v="price">Lowest price</button>
+        </div>
+        <p class="hint" id="priorityHint"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Preferred days</legend>
+        <div class="weekdays" id="weekdays"></div>
+        <p class="hint">Optional. Sessions on these days are ranked first.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Which sessions to show</legend>
+        <div class="filter-grid">
+          <span class="seg-label">Days</span><span class="seg" data-key="range">
+            <button type="button" data-v="week">Next 7 days</button><button type="button" data-v="weekend">Weekends</button><button type="button" data-v="all">All</button>
+          </span>
+          <span class="seg-label">Time</span><span class="seg" data-key="tod">
+            <button type="button" data-v="any">Any</button><button type="button" data-v="am">Before 12:00</button><button type="button" data-v="pm">12:00 to 17:00</button><button type="button" data-v="eve">After 17:00</button>
+          </span>
+          <span class="seg-label">Wave</span><span class="seg" data-key="wave">
+            <button type="button" data-v="all">Both</button><button type="button" data-v="Left">Left</button><button type="button" data-v="Right">Right</button>
+          </span>
+          <span></span><label class="check"><input type="checkbox" id="showFull"> Show full sessions</label>
+        </div>
+        <p class="hint">Applies to the best sessions and the full list.</p>
+      </fieldset>
+
+      <div class="actions">
+        <span class="blocked" id="doneReason" aria-live="polite"></span>
+        <button class="primary" value="done" aria-describedby="doneReason">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <section aria-labelledby="h-picks">
+    <h2 id="h-picks">Best sessions for you</h2>
+    <p class="subhead" id="picksWhy"></p>
+    <div class="picks" id="picks"></div>
+  </section>
+
+  <section aria-labelledby="h-all">
+    <h2 id="h-all">All sessions at your levels</h2>
+    <div class="toolbar">
+      <span class="filters" id="filterSummary"></span>
+      <span class="count" id="count" aria-live="polite"></span>
+    </div>
+    <div id="table"></div>
+  </section>
+
+  <footer>
+    Unofficial personal tool, not made or endorsed by Alaïa Bay.
+    "Booked" is an estimate: capacity is taken as the most places ever seen free for that level (at least 12).
+    Places and prices come from each slot's booking popup at the time above, so check before you go.
+    Booking happens on <a href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">booking.alaiabay.ch</a>.
+  </footer>
+</div>
+
+<script>
+const DATA = /*DATA*/[];
+const GENERATED = "/*GENERATED*/";
+const GENERATED_ISO = "/*GENERATED_ISO*/";
+const BOOK_URL = "https://booking.alaiabay.ch/activity-agenda";
+
+// Level ladder as listed on the booking site, easiest first. Off-ladder sessions go last.
+const LADDER = ["Rookie", "Rookie Rider", "Cruiser", "Intermediate Cruiser", "Advanced Cruiser Summer Edition",
+  "Advanced Cruiser", "Advanced Turn", "Expert Turn", "Expert Turn to Barrel", "Easy Barrel", "Expert Barrel",
+  "Mega Turn", "Mega Barrel"];
+const rank = l => { const i = LADDER.indexOf(l); return i < 0 ? 99 : i; };
+
+const now = new Date();
+const slots = DATA.filter(s => !s.past && new Date(`${s.date}T${s.start}:00`) > now);
+const levels = [...new Set(DATA.map(s => s.level))].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+const colorOf = Object.fromEntries(DATA.map(s => [s.level, s.level_color]));
+const ladderLevels = levels.filter(l => rank(l) < 99);
+
+// Capacity per level: the most places ever seen free, never below 12.
+const capacity = {};
+for (const s of DATA) capacity[s.level] = Math.max(capacity[s.level] || 12, s.places_left || 0);
+
+// Usual price per level, used when a slot's popup listed no products.
+function usualBy(getPrice) {
+  const out = {};
+  for (const l of levels) {
+    const counts = {};
+    for (const s of DATA) if (s.level === l) { const p = getPrice(s); if (p) counts[p] = (counts[p] || 0) + 1; }
+    const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (best) out[l] = +best[0];
+  }
+  return out;
+}
+const usualPrice = usualBy(adultPrice);
+const usualKidPrice = usualBy(s => kidPrice(s) ?? adultPrice(s));
+
+function adultPrice(s) {
+  const p = s.products || [];
+  if (!p.length) return null;
+  const adult = p.find(x => /adult/i.test(x.name));
+  return (adult || p.reduce((a, b) => (a.price_chf <= b.price_chf ? a : b))).price_chf;
+}
+
+function lvlInk(hex) {
+  const n = parseInt(hex.slice(1).padEnd(6, "0"), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  const lum = [r, g, b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  return (.2126 * lum[0] + .7152 * lum[1] + .0722 * lum[2]) > .35 ? "#1c1d1f" : "#ffffff";
+}
+const pill = l => `<span class="pill" style="--lvl:${colorOf[l]};--lvl-ink:${lvlInk(colorOf[l])}">${l}</span>`;
+
+function crowd(s) {
+  const left = s.places_left || 0;
+  if (s.sold_out || !left) return { key: "full", pct: 1, color: "var(--full)", word: "Full", detail: "no places left" };
+  const cap = capacity[s.level];
+  const booked = Math.max(0, cap - left);
+  const pct = booked / cap;
+  const [word, color] = pct < .4 ? ["Quiet", "var(--quiet)"] : pct < .75 ? ["Moderate", "var(--moderate)"] : ["Busy", "var(--busy)"];
+  return { key: word.toLowerCase(), pct, color, word, detail: `${left} of ~${cap} places free` };
+}
+
+function kidPrice(s) {
+  const kid = (s.products || []).find(x => /kid/i.test(x.name));
+  return kid ? kid.price_chf : null;
+}
+
+function priceHtml(s) {
+  const isKid = state.surfer === "kid";
+  // Kids pay the kid rate when the slot has one; otherwise the only listed price applies.
+  const p = isKid ? (kidPrice(s) ?? adultPrice(s)) : adultPrice(s);
+  const tags = [];
+  const main = (s.products || []).find(x => /adult/i.test(x.name)) || (s.products || [])[0];
+  if (main && /at CHF\s*\d+/i.test(main.name)) tags.push(`<span class="tag deal">Deal</span>`);
+  if (main && /coached/i.test(main.name)) tags.push(`<span class="tag kind" title="Session with a coach in the water">Coached</span>`);
+  if (main && /guided/i.test(main.name)) tags.push(`<span class="tag kind" title="Session with a guide, no coaching">Guided</span>`);
+  if (/free surf/i.test(s.price_category)) tags.push(`<span class="tag free">Free Surf</span>`);
+  const usual = (isKid ? usualKidPrice : usualPrice)[s.level];
+  const price = p != null
+    ? `<span class="price">CHF ${p.toFixed(0)}</span>`
+    : `<span class="price unknown">Price not listed${usual ? `, usually CHF ${usual}` : ""}</span>`;
+  return `${price} ${tags.join(" ")}`;
+}
+
+const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+const fmtDayLong = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+function crowdHtml(c) {
+  return `<div class="crowd"><div class="lbl"><b style="color:${c.color}">${c.word}</b><span>${c.detail}</span></div>
+    <div class="meter" aria-hidden="true"><i style="width:${Math.max(4, c.pct * 100)}%;background:${c.color}"></i></div></div>`;
+}
+
+// ---- state ----
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const weekday = s => WEEKDAYS[(new Date(s.date + "T12:00:00").getDay() + 6) % 7];
+
+const state = { levels: new Set(), surfer: "adult", priority: "crowd", days: new Set(), range: "week", tod: "any", wave: "all", showFull: false };
+let hasSettings = false;
+try {
+  const o = JSON.parse(localStorage.getItem("waveView2") || "{}");
+  if (Array.isArray(o.levels)) state.levels = new Set(o.levels.filter(l => levels.includes(l)));
+  if (Array.isArray(o.days)) state.days = new Set(o.days.filter(d => WEEKDAYS.includes(d)));
+  if (["crowd", "price"].includes(o.priority)) state.priority = o.priority;
+  for (const k of ["surfer", "range", "tod", "wave", "showFull"]) if (k in o) state[k] = o[k];
+  hasSettings = state.levels.size > 0;
+} catch (e) {}
+function save() {
+  try { localStorage.setItem("waveView2", JSON.stringify({ ...state, levels: [...state.levels], days: [...state.days] })); } catch (e) {}
+}
+const myLevels = () => state.levels.size ? state.levels : new Set(levels);
+
+function inRange(s) {
+  const day = new Date(s.date + "T12:00:00");
+  if (state.range === "week") return (day - now) / 864e5 < 7;
+  if (state.range === "weekend") return day.getDay() === 0 || day.getDay() === 6;
+  return true;
+}
+function inTod(s) {
+  const h = +s.start.slice(0, 2);
+  return state.tod === "any" || (state.tod === "am" && h < 12) || (state.tod === "pm" && h >= 12 && h < 17) || (state.tod === "eve" && h >= 17);
+}
+
+// ---- render ----
+function renderLadder() {
+  const el = document.getElementById("ladder");
+  el.innerHTML = levels.map(l => {
+    const i = ladderLevels.indexOf(l);
+    const step = `<span class="step">${i < 0 ? "event" : `${i + 1}/${ladderLevels.length}`}</span>`;
+    return `<button type="button" class="rung" data-level="${l}" aria-pressed="${state.levels.has(l)}">${pill(l)}${step}</button>`;
+  }).join("");
+}
+function syncSettings() {
+  document.querySelectorAll(".rung").forEach(b => b.setAttribute("aria-pressed", state.levels.has(b.dataset.level)));
+  document.querySelectorAll("[data-setting] button").forEach(b =>
+    b.setAttribute("aria-pressed", b.dataset.v === state[b.parentElement.dataset.setting]));
+  document.querySelectorAll("#weekdays button").forEach(b => b.setAttribute("aria-pressed", state.days.has(b.dataset.day)));
+  document.getElementById("priorityHint").textContent = {
+    crowd: "Least booked sessions first, then the cheapest.",
+    price: "Cheapest sessions first, then the least booked.",
+  }[state.priority];
+  const noLevels = state.levels.size === 0;
+  document.querySelector("#settings .primary").disabled = noLevels;
+  document.getElementById("doneReason").textContent = noLevels ? "Pick at least 1 level under Your levels to continue." : "";
+}
+function renderProfile() {
+  const lv = [...state.levels].sort((a, b) => rank(a) - rank(b));
+  document.getElementById("profile").innerHTML = `
+    <span class="who">Surfer <b>${state.surfer === "kid" ? "Kid" : "Adult"}</b></span>
+    <span class="who">·</span>
+    <span class="who">Levels</span> ${lv.length ? lv.map(pill).join(" ") : `<span class="who"><b>all</b></span>`}
+    <span class="who">·</span>
+    <span class="who">Priority <b>${PRIORITY_LABEL[state.priority]}</b>${state.days.size ? `, ${sortedDays().join(", ")} first` : ""}</span>
+    <button class="edit" id="openSettings" aria-haspopup="dialog">Settings</button>`;
+}
+function syncToolbar() {
+  document.querySelectorAll(".seg[data-key]").forEach(seg =>
+    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state[seg.dataset.key])));
+  document.getElementById("showFull").checked = state.showFull;
+  const label = key => document.querySelector(`.seg[data-key="${key}"] [data-v="${state[key]}"]`).textContent;
+  document.getElementById("filterSummary").innerHTML =
+    `Days <b>${label("range")}</b> · Time <b>${label("tod")}</b> · Wave <b>${label("wave")}</b>` +
+    (state.showFull ? " · <b>including full</b>" : "");
+  const head = document.getElementById("priceHead");
+  if (head) head.textContent = state.surfer === "kid" ? "Kid price" : "Adult price";
+}
+
+const PRIORITY_LABEL = { crowd: "fewest people", price: "lowest price" };
+const sortedDays = () => WEEKDAYS.filter(d => state.days.has(d));
+
+// Price used for ranking: the surfer's listed price, else the level's usual one.
+function rankPrice(s) {
+  const kid = state.surfer === "kid";
+  const p = kid ? (kidPrice(s) ?? adultPrice(s)) : adultPrice(s);
+  return p ?? (kid ? usualKidPrice : usualPrice)[s.level] ?? 9999;
+}
+
+function compareByPriority(a, b) {
+  const crowdDiff = a.c.pct - b.c.pct;
+  const priceDiff = rankPrice(a.s) - rankPrice(b.s);
+  const dayDiff = (state.days.has(weekday(b.s)) ? 1 : 0) - (state.days.has(weekday(a.s)) ? 1 : 0);
+  const timeDiff = (a.s.date + a.s.start).localeCompare(b.s.date + b.s.start);
+  // Preferred days always come first; the chosen priority decides within them.
+  const order = state.priority === "price" ? [dayDiff, priceDiff, crowdDiff] : [dayDiff, crowdDiff, priceDiff];
+  return order.find(d => d !== 0) || timeDiff;
+}
+
+function renderPicks() {
+  const lv = myLevels();
+  // With no levels picked, leave events (Special, Girls Only) out of the picks: their big capacity always wins.
+  const pool = slots.filter(s => lv.has(s.level) && s.places_left > 0 && (state.levels.size || rank(s.level) < 99) &&
+    inRange(s) && inTod(s) && (state.wave === "all" || s.wave === state.wave));
+  const best = pool
+    .map(s => ({ s, c: crowd(s) }))
+    .sort(compareByPriority)
+    .slice(0, 3);
+  document.getElementById("picksWhy").textContent =
+    (state.days.size ? `${sortedDays().join(", ")} first, then ranked` : "Ranked") +
+    ` by ${PRIORITY_LABEL[state.priority]}. Change this in Settings.`;
+  document.getElementById("picks").innerHTML = best.length ? best.map(({ s, c }) => `
+    <article class="pick">
+      <div class="when">${fmtDay(s.date)} · ${s.start}</div>
+      <div class="row">${pill(s.level)}<span class="meta">${s.wave} wave, until ${s.end}</span></div>
+      ${crowdHtml(c)}
+      <div class="row"><span>${priceHtml(s)}</span>
+        <a class="book" href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a></div>
+    </article>`).join("")
+    : `<div class="empty">No open sessions at your levels in the data.</div>`;
+}
+
+function renderTable() {
+  const lv = myLevels();
+  const rows = slots.filter(s => lv.has(s.level) && inRange(s) && inTod(s) &&
+    (state.wave === "all" || s.wave === state.wave) && (state.showFull || s.places_left > 0))
+    .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start) || a.wave.localeCompare(b.wave));
+  const open = rows.filter(s => s.places_left > 0).length;
+  document.getElementById("count").textContent = `${open} open session${open === 1 ? "" : "s"}`;
+
+  if (!rows.length) {
+    document.getElementById("table").innerHTML = `<div class="empty">Nothing matches these filters.
+      ${state.range !== "all" ? `<button data-set="range:all">Show all days</button>` : ""}
+      ${state.tod !== "any" ? `<button data-set="tod:any">Any time</button>` : ""}</div>`;
+    return;
+  }
+  let html = `<table><thead><tr><th>Time</th><th>Level</th><th>Wave</th><th>Crowd</th><th id="priceHead"></th><th></th></tr></thead><tbody>`;
+  let day = null;
+  for (const s of rows) {
+    if (s.date !== day) {
+      day = s.date;
+      const n = rows.filter(r => r.date === day && r.places_left > 0).length;
+      const pref = state.days.has(weekday(s)) ? `<span class="pref">Preferred day</span>` : "";
+      html += `<tr class="day"><td colspan="6">${fmtDayLong(day)}<span>${n} open</span>${pref}</td></tr>`;
+    }
+    const c = crowd(s);
+    html += `<tr class="${c.key === "full" ? "full" : ""}">
+      <td class="time">${s.start} to ${s.end}</td><td>${pill(s.level)}</td><td>${s.wave}</td>
+      <td class="crowdcell">${crowdHtml(c)}</td><td class="pricecell">${c.key === "full" ? "" : priceHtml(s)}</td>
+      <td class="bookcell">${c.key === "full" ? "" : `<a href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a>`}</td></tr>`;
+  }
+  document.getElementById("table").innerHTML = html + `</tbody></table>`;
+}
+
+// The table header is rendered inside renderTable, so sync it after.
+function render() { save(); syncSettings(); renderProfile(); renderPicks(); renderTable(); syncToolbar(); }
+
+// Event delegation keeps buttons in place, so keyboard focus survives a click.
+const dialog = document.getElementById("settings");
+document.getElementById("profile").addEventListener("click", e => {
+  if (e.target.closest("#openSettings")) dialog.showModal();
+});
+document.getElementById("ladder").addEventListener("click", e => {
+  const b = e.target.closest(".rung"); if (!b) return;
+  const l = b.dataset.level; state.levels.has(l) ? state.levels.delete(l) : state.levels.add(l); render();
+});
+document.querySelectorAll("[data-setting]").forEach(seg => seg.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; state[seg.dataset.setting] = b.dataset.v; render();
+}));
+document.getElementById("weekdays").innerHTML = WEEKDAYS.map(d => `<button type="button" data-day="${d}">${d}</button>`).join("");
+document.getElementById("weekdays").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset.day; state.days.has(d) ? state.days.delete(d) : state.days.add(d); render();
+});
+// Escape would close the dialog with no levels picked; keep it open until there is at least 1.
+dialog.addEventListener("cancel", e => { if (document.querySelector("#settings .primary").disabled) e.preventDefault(); });
+document.querySelectorAll(".seg[data-key]").forEach(seg => seg.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; state[seg.dataset.key] = b.dataset.v; render();
+}));
+document.getElementById("showFull").onchange = e => { state.showFull = e.target.checked; render(); };
+document.getElementById("table").addEventListener("click", e => {
+  const b = e.target.closest("[data-set]"); if (!b) return;
+  const [k, v] = b.dataset.set.split(":"); state[k] = v; render();
+});
+
+// On your computer (serve.py) you refresh by hand; the published copy updates on a schedule.
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+const ageH = (now - new Date(GENERATED_ISO)) / 36e5;
+// The schedule leaves a 14 h gap overnight, so only warn past that.
+const staleAfterH = isLocal ? 6 : 16;
+const stamp = document.getElementById("stamp");
+stamp.textContent = `Data from ${GENERATED}` + (ageH > staleAfterH
+  ? ` · ${Math.round(ageH)} h old, ${isLocal ? "refresh before booking" : "the automatic update may have failed"}`
+  : "");
+if (ageH > staleAfterH) stamp.classList.add("stale");
+document.getElementById("refresh").hidden = !isLocal;
+if (!isLocal) document.getElementById("refreshMsg").textContent = "Updates automatically around 07:00, 12:00 and 17:00.";
+
+// Refresh asks serve.py to rerun the scraper (about 1 minute), then reloads the page.
+document.getElementById("refresh").addEventListener("click", async e => {
+  const btn = e.currentTarget, msg = document.getElementById("refreshMsg");
+  btn.disabled = true; btn.textContent = "Refreshing…";
+  msg.className = "refresh-msg"; msg.textContent = "Reading the booking site. This takes about 1 minute.";
+  const fail = text => { btn.disabled = false; btn.textContent = "Refresh data"; msg.className = "refresh-msg error"; msg.textContent = text; };
+  try {
+    const res = await fetch("refresh", { method: "POST" });
+    const body = await res.json().catch(() => null);
+    if (!body) return fail("Refresh only works when the page is opened through serve.py on your computer.");
+    if (!body.ok) return fail(`Refresh failed: ${body.error}. The previous data is kept.`);
+    msg.textContent = `Updated ${body.slots} sessions. Reloading…`;
+    location.reload();
+  } catch (err) {
+    fail("Could not reach the local server. Start it with: python3 serve.py");
+  }
+});
+
+renderLadder();
+render();
+// First visit: ask for settings before showing anything personal.
+if (!hasSettings) dialog.showModal();
+</script>
+</body>
+</html>
