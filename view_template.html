@@ -148,18 +148,6 @@
   .empty button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 5px 12px; margin-left: 6px; cursor: pointer; }
 
   /* Weather */
-  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-  .wday {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px;
-    display: grid; justify-items: center; gap: 2px; text-align: center;
-  }
-  .wday.pref { border-color: var(--accent); }
-  .wday .d { font-size: 13px; font-weight: 650; }
-  .wday img { width: 44px; height: 44px; }
-  .wday .t { font-size: 14px; font-variant-numeric: tabular-nums; }
-  .wday .t b { font-weight: 650; }
-  .wday .t span, .wday .r, .wday .n { color: var(--muted); font-size: 12px; }
-  .wday .r.wet { color: var(--accent); font-weight: 600; }
   .wx { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 14px; }
   .wx img { width: 28px; height: 28px; }
   .wx b { font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -167,7 +155,6 @@
   .wx.none { color: var(--muted); font-size: 12px; }
   td.wxcell { width: 170px; }
   @media (max-width: 760px) {
-    .days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .picks { grid-template-columns: 1fr; }
   }
 
@@ -214,7 +201,7 @@
       <fieldset>
         <legend>What matters most when picking a session?</legend>
         <div class="seg" data-setting="priority">
-          <button type="button" data-v="crowd">Fewest people</button><button type="button" data-v="price">Lowest price</button>
+          <button type="button" data-v="crowd">Fewest people</button><button type="button" data-v="price">Lowest price</button><button type="button" data-v="weather" id="weatherPriority">Best weather</button>
         </div>
         <p class="hint" id="priorityHint"></p>
       </fieldset>
@@ -248,12 +235,6 @@
       </div>
     </form>
   </dialog>
-
-  <section aria-labelledby="h-weather" id="weather" hidden>
-    <h2 id="h-weather">Weather in Sion, next 7 days</h2>
-    <p class="subhead" id="weatherWhy"></p>
-    <div class="days" id="days"></div>
-  </section>
 
   <section aria-labelledby="h-picks">
     <h2 id="h-picks">Best sessions for you</h2>
@@ -391,33 +372,17 @@ function weatherHtml(s) {
     `<span class="sr">${title}</span></span>`;
 }
 
-function renderWeather() {
-  if (!FORECAST) return;
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Zurich" });
-  const days = FORECAST.days.filter(d => d.date >= today).slice(0, 7);
-  if (!days.length) return;
-  const lv = myLevels();
-  document.getElementById("weather").hidden = false;
-  document.getElementById("weatherWhy").textContent =
-    `MeteoSwiss forecast for ${FORECAST.point}, issued ${new Date(FORECAST.issued).toLocaleString("en-GB",
-      { weekday: "short", hour: "2-digit", minute: "2-digit" })}. Open sessions count your levels and filters.`;
-  document.getElementById("days").innerHTML = days.map(d => {
-    const open = slots.filter(s => s.date === d.date && lv.has(s.level) && s.places_left > 0 && inTod(s) &&
-      (state.wave === "all" || s.wave === state.wave)).length;
-    const wd = WEEKDAYS[(new Date(d.date + "T12:00:00").getDay() + 6) % 7];
-    const rain = d.rain_mm >= 0.5 ? `${d.rain_mm.toFixed(d.rain_mm < 10 ? 1 : 0)} mm rain` : "Dry";
-    return `<div class="wday${state.days.has(wd) ? " pref" : ""}">
-      <span class="d">${fmtDay(d.date).replace(/ \w+$/, "")}</span>
-      <img src="${ICON_URL(d.icon)}" alt="" loading="lazy">
-      <span class="t"><b>${d.tmax.toFixed(0)}°</b> <span>${d.tmin.toFixed(0)}°</span></span>
-      <span class="r${d.rain_mm >= 0.5 ? " wet" : ""}">${rain}</span>
-      <span class="n">${open} open</span>
-      <span class="sr">High ${d.tmax.toFixed(0)}°C, low ${d.tmin.toFixed(0)}°C.</span>
-    </div>`;
-  }).join("");
-  document.getElementById("weatherCredit").textContent =
-    `Weather: MeteoSwiss open data, local forecast for ${FORECAST.point}, which is also what the MeteoSwiss app shows.`;
+// Weather rank, lower is better: rain chance first (in steps of 10%), then warmth.
+// Sessions without a forecast go last.
+function weatherRank(s) {
+  const w = sessionWeather(s);
+  return w ? Math.round(w.rain_pct / 10) * 100 - Math.round(w.temp) : 1e6;
 }
+
+if (FORECAST) document.getElementById("weatherCredit").textContent =
+  `Weather: MeteoSwiss open data, local forecast for ${FORECAST.point}, which is also what the MeteoSwiss app shows.`;
+// Without a forecast there is nothing to rank by.
+document.getElementById("weatherPriority").hidden = !FORECAST;
 
 // ---- state ----
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -429,7 +394,7 @@ try {
   const o = JSON.parse(localStorage.getItem("waveView2") || "{}");
   if (Array.isArray(o.levels)) state.levels = new Set(o.levels.filter(l => levels.includes(l)));
   if (Array.isArray(o.days)) state.days = new Set(o.days.filter(d => WEEKDAYS.includes(d)));
-  if (["crowd", "price"].includes(o.priority)) state.priority = o.priority;
+  if (["crowd", "price", ...(FORECAST ? ["weather"] : [])].includes(o.priority)) state.priority = o.priority;
   for (const k of ["surfer", "range", "tod", "wave", "showFull"]) if (k in o) state[k] = o[k];
   hasSettings = state.levels.size > 0;
 } catch (e) {}
@@ -466,6 +431,7 @@ function syncSettings() {
   document.getElementById("priorityHint").textContent = {
     crowd: "Least booked sessions first, then the cheapest.",
     price: "Cheapest sessions first, then the least booked.",
+    weather: "Lowest chance of rain and warmest first, then the least booked. Uses the MeteoSwiss forecast, which covers about 7 days.",
   }[state.priority];
   const noLevels = state.levels.size === 0;
   document.querySelector("#settings .primary").disabled = noLevels;
@@ -493,7 +459,7 @@ function syncToolbar() {
   if (head) head.textContent = state.surfer === "kid" ? "Kid price" : "Adult price";
 }
 
-const PRIORITY_LABEL = { crowd: "fewest people", price: "lowest price" };
+const PRIORITY_LABEL = { crowd: "fewest people", price: "lowest price", weather: "best weather" };
 const sortedDays = () => WEEKDAYS.filter(d => state.days.has(d));
 
 // Price used for ranking: the surfer's listed price, else the level's usual one.
@@ -509,7 +475,10 @@ function compareByPriority(a, b) {
   const dayDiff = (state.days.has(weekday(b.s)) ? 1 : 0) - (state.days.has(weekday(a.s)) ? 1 : 0);
   const timeDiff = (a.s.date + a.s.start).localeCompare(b.s.date + b.s.start);
   // Preferred days always come first; the chosen priority decides within them.
-  const order = state.priority === "price" ? [dayDiff, priceDiff, crowdDiff] : [dayDiff, crowdDiff, priceDiff];
+  const order = {
+    price: [dayDiff, priceDiff, crowdDiff],
+    weather: [dayDiff, weatherRank(a.s) - weatherRank(b.s), crowdDiff, priceDiff],
+  }[state.priority] || [dayDiff, crowdDiff, priceDiff];
   return order.find(d => d !== 0) || timeDiff;
 }
 
@@ -573,7 +542,7 @@ function renderTable() {
 }
 
 // The table header is rendered inside renderTable, so sync it after.
-function render() { save(); syncSettings(); renderProfile(); renderWeather(); renderPicks(); renderTable(); syncToolbar(); }
+function render() { save(); syncSettings(); renderProfile(); renderPicks(); renderTable(); syncToolbar(); }
 
 // Event delegation keeps buttons in place, so keyboard focus survives a click.
 const dialog = document.getElementById("settings");
