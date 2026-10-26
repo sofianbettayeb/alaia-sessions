@@ -30,6 +30,13 @@ jobs:
           python3 -I scrape_agenda.py --weeks 2 --details > agenda.json.tmp
           mv agenda.json.tmp agenda.json
 
+      # The forecast is extra: if MeteoSwiss is down, keep the last one and still publish sessions.
+      - name: Fetch the MeteoSwiss forecast
+        continue-on-error: true
+        run: |
+          python3 -I fetch_forecast.py > forecast.json.tmp
+          mv forecast.json.tmp forecast.json
+
       - name: Build the page
         run: python3 -I build_view.py
 
@@ -37,7 +44,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add agenda.json index.html
+          git add agenda.json forecast.json index.html
           if git diff --cached --quiet; then
             echo "No changes."
           else

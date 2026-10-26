@@ -32,6 +32,15 @@ def refresh():
         tmp.unlink(missing_ok=True)
         raise RuntimeError(scrape.stderr.strip().splitlines()[-1] if scrape.stderr.strip() else "scraper failed")
     tmp.replace(HERE / "agenda.json")
+    # The forecast is extra: on failure keep the previous one.
+    tmp = HERE / "forecast.json.tmp"
+    with tmp.open("w") as out:
+        forecast = subprocess.run([sys.executable, "-I", str(HERE / "fetch_forecast.py")],
+                                  stdout=out, stderr=subprocess.DEVNULL, timeout=300)
+    if forecast.returncode == 0:
+        tmp.replace(HERE / "forecast.json")
+    else:
+        tmp.unlink(missing_ok=True)
     subprocess.run([sys.executable, "-I", str(HERE / "build_view.py")], check=True, capture_output=True, timeout=60)
     return len(json.loads((HERE / "agenda.json").read_text()))
 

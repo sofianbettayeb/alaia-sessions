@@ -147,6 +147,30 @@
   .empty { padding: 28px; text-align: center; color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; }
   .empty button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 5px 12px; margin-left: 6px; cursor: pointer; }
 
+  /* Weather */
+  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+  .wday {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px;
+    display: grid; justify-items: center; gap: 2px; text-align: center;
+  }
+  .wday.pref { border-color: var(--accent); }
+  .wday .d { font-size: 13px; font-weight: 650; }
+  .wday img { width: 44px; height: 44px; }
+  .wday .t { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .wday .t b { font-weight: 650; }
+  .wday .t span, .wday .r, .wday .n { color: var(--muted); font-size: 12px; }
+  .wday .r.wet { color: var(--accent); font-weight: 600; }
+  .wx { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 14px; }
+  .wx img { width: 28px; height: 28px; }
+  .wx b { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .wx .note { font-size: 12px; color: var(--accent); font-weight: 600; }
+  .wx.none { color: var(--muted); font-size: 12px; }
+  td.wxcell { width: 170px; }
+  @media (max-width: 760px) {
+    .days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .picks { grid-template-columns: 1fr; }
+  }
+
   footer { color: var(--muted); font-size: 12px; margin-top: 28px; line-height: 1.6; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
@@ -225,6 +249,12 @@
     </form>
   </dialog>
 
+  <section aria-labelledby="h-weather" id="weather" hidden>
+    <h2 id="h-weather">Weather in Sion, next 7 days</h2>
+    <p class="subhead" id="weatherWhy"></p>
+    <div class="days" id="days"></div>
+  </section>
+
   <section aria-labelledby="h-picks">
     <h2 id="h-picks">Best sessions for you</h2>
     <p class="subhead" id="picksWhy"></p>
@@ -245,6 +275,7 @@
     "Booked" is an estimate: capacity is taken as the most places ever seen free for that level (at least 12).
     Places and prices come from each slot's booking popup at the time above, so check before you go.
     Booking happens on <a href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">booking.alaiabay.ch</a>.
+    <span id="weatherCredit"></span>
   </footer>
 </div>
 
@@ -253,6 +284,8 @@ const DATA = /*DATA*/[];
 const GENERATED = "/*GENERATED*/";
 const GENERATED_ISO = "/*GENERATED_ISO*/";
 const BOOK_URL = "https://booking.alaiabay.ch/activity-agenda";
+const FORECAST = /*FORECAST*/null;
+const ICON_URL = n => `https://www.meteoswiss.admin.ch/static/resources/weather-symbols/${n}.svg`;
 
 // Level ladder as listed on the booking site, easiest first. Off-ladder sessions go last.
 const LADDER = ["Rookie", "Rookie Rider", "Cruiser", "Intermediate Cruiser", "Advanced Cruiser Summer Edition",
@@ -336,6 +369,54 @@ const fmtDayLong = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { 
 function crowdHtml(c) {
   return `<div class="crowd"><div class="lbl"><b style="color:${c.color}">${c.word}</b><span>${c.detail}</span></div>
     <div class="meter" aria-hidden="true"><i style="width:${Math.max(4, c.pct * 100)}%;background:${c.color}"></i></div></div>`;
+}
+
+// ---- weather ----
+// Hourly forecast values are stamped at the end of the hour they cover,
+// so a 10:00 to 11:00 session reads the "11" entry.
+function sessionWeather(s) {
+  if (!FORECAST || !s.end) return null;
+  const endHour = +s.end.slice(0, 2) + (s.end.slice(3) === "00" ? 0 : 1);
+  return FORECAST.hours[`${s.date}T${String(endHour).padStart(2, "0")}`] || null;
+}
+function weatherHtml(s) {
+  const w = sessionWeather(s);
+  if (!w) return `<span class="wx none">${FORECAST ? "No forecast yet" : ""}</span>`;
+  const notes = [];
+  if (w.rain_pct >= 30) notes.push(`Rain ${w.rain_pct}%`);
+  if (w.wind >= 20) notes.push(`Wind ${w.wind} km/h`);
+  const title = `${w.temp.toFixed(0)}°C, rain chance ${w.rain_pct}%, wind ${w.wind} km/h (MeteoSwiss)`;
+  return `<span class="wx" title="${title}"><img src="${ICON_URL(w.icon)}" alt="" loading="lazy">` +
+    `<b>${w.temp.toFixed(0)}°</b>${notes.length ? `<span class="note">${notes.join(", ")}</span>` : ""}` +
+    `<span class="sr">${title}</span></span>`;
+}
+
+function renderWeather() {
+  if (!FORECAST) return;
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Zurich" });
+  const days = FORECAST.days.filter(d => d.date >= today).slice(0, 7);
+  if (!days.length) return;
+  const lv = myLevels();
+  document.getElementById("weather").hidden = false;
+  document.getElementById("weatherWhy").textContent =
+    `MeteoSwiss forecast for ${FORECAST.point}, issued ${new Date(FORECAST.issued).toLocaleString("en-GB",
+      { weekday: "short", hour: "2-digit", minute: "2-digit" })}. Open sessions count your levels and filters.`;
+  document.getElementById("days").innerHTML = days.map(d => {
+    const open = slots.filter(s => s.date === d.date && lv.has(s.level) && s.places_left > 0 && inTod(s) &&
+      (state.wave === "all" || s.wave === state.wave)).length;
+    const wd = WEEKDAYS[(new Date(d.date + "T12:00:00").getDay() + 6) % 7];
+    const rain = d.rain_mm >= 0.5 ? `${d.rain_mm.toFixed(d.rain_mm < 10 ? 1 : 0)} mm rain` : "Dry";
+    return `<div class="wday${state.days.has(wd) ? " pref" : ""}">
+      <span class="d">${fmtDay(d.date).replace(/ \w+$/, "")}</span>
+      <img src="${ICON_URL(d.icon)}" alt="" loading="lazy">
+      <span class="t"><b>${d.tmax.toFixed(0)}°</b> <span>${d.tmin.toFixed(0)}°</span></span>
+      <span class="r${d.rain_mm >= 0.5 ? " wet" : ""}">${rain}</span>
+      <span class="n">${open} open</span>
+      <span class="sr">High ${d.tmax.toFixed(0)}°C, low ${d.tmin.toFixed(0)}°C.</span>
+    </div>`;
+  }).join("");
+  document.getElementById("weatherCredit").textContent =
+    `Weather: MeteoSwiss open data, local forecast for ${FORECAST.point}, which is also what the MeteoSwiss app shows.`;
 }
 
 // ---- state ----
@@ -448,6 +529,7 @@ function renderPicks() {
     <article class="pick">
       <div class="when">${fmtDay(s.date)} · ${s.start}</div>
       <div class="row">${pill(s.level)}<span class="meta">${s.wave} wave, until ${s.end}</span></div>
+      ${FORECAST ? `<div class="row">${weatherHtml(s)}</div>` : ""}
       ${crowdHtml(c)}
       <div class="row"><span>${priceHtml(s)}</span>
         <a class="book" href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a></div>
@@ -469,18 +551,21 @@ function renderTable() {
       ${state.tod !== "any" ? `<button data-set="tod:any">Any time</button>` : ""}</div>`;
     return;
   }
-  let html = `<table><thead><tr><th>Time</th><th>Level</th><th>Wave</th><th>Crowd</th><th id="priceHead"></th><th></th></tr></thead><tbody>`;
+  const wxHead = FORECAST ? `<th>Weather</th>` : "";
+  const cols = FORECAST ? 7 : 6;
+  let html = `<table><thead><tr><th>Time</th><th>Level</th><th>Wave</th>${wxHead}<th>Crowd</th><th id="priceHead"></th><th></th></tr></thead><tbody>`;
   let day = null;
   for (const s of rows) {
     if (s.date !== day) {
       day = s.date;
       const n = rows.filter(r => r.date === day && r.places_left > 0).length;
       const pref = state.days.has(weekday(s)) ? `<span class="pref">Preferred day</span>` : "";
-      html += `<tr class="day"><td colspan="6">${fmtDayLong(day)}<span>${n} open</span>${pref}</td></tr>`;
+      html += `<tr class="day"><td colspan="${cols}">${fmtDayLong(day)}<span>${n} open</span>${pref}</td></tr>`;
     }
     const c = crowd(s);
     html += `<tr class="${c.key === "full" ? "full" : ""}">
       <td class="time">${s.start} to ${s.end}</td><td>${pill(s.level)}</td><td>${s.wave}</td>
+      ${FORECAST ? `<td class="wxcell">${weatherHtml(s)}</td>` : ""}
       <td class="crowdcell">${crowdHtml(c)}</td><td class="pricecell">${c.key === "full" ? "" : priceHtml(s)}</td>
       <td class="bookcell">${c.key === "full" ? "" : `<a href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a>`}</td></tr>`;
   }
@@ -488,7 +573,7 @@ function renderTable() {
 }
 
 // The table header is rendered inside renderTable, so sync it after.
-function render() { save(); syncSettings(); renderProfile(); renderPicks(); renderTable(); syncToolbar(); }
+function render() { save(); syncSettings(); renderProfile(); renderWeather(); renderPicks(); renderTable(); syncToolbar(); }
 
 // Event delegation keeps buttons in place, so keyboard focus survives a click.
 const dialog = document.getElementById("settings");
