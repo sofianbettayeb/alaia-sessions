@@ -44,7 +44,8 @@
 
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
   section { margin-bottom: 32px; }
-  .sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sechead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 12px; margin-bottom: 10px; }
+  .sechead h2 { margin: 0; }
   .count { font-size: 13px; color: var(--muted); white-space: nowrap; }
 
   /* Profile summary */
@@ -152,12 +153,11 @@
   thead th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 10px 14px; background: #faf9f6; border-bottom: 1px solid var(--line); }
   td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 14px; }
   tbody:last-child tr:last-child td { border-bottom: 0; }
-  tr.day th { text-align: left; background: #faf9f6; font-weight: 650; font-size: 14px; padding: 14px 14px 10px; border-bottom: 1px solid var(--line); }
-  tr.day th span { font-weight: 400; color: var(--muted); margin-left: 8px; font-size: 13px; }
-  tr.day th .pref { color: var(--accent); font-weight: 600; font-size: 12px; }
   tr.full td { color: var(--full); }
   tr.full .pill { opacity: .55; }
-  td.time { font-variant-numeric: tabular-nums; font-weight: 600; width: 130px; white-space: nowrap; }
+  td.time { font-variant-numeric: tabular-nums; width: 150px; white-space: nowrap; font-size: 13px; color: var(--muted); }
+  td.time .d { display: block; font-size: 14px; font-weight: 650; color: var(--ink); }
+  .pref { color: var(--accent); font-weight: 600; font-size: 12px; }
   td.crowdcell { width: 240px; }
   td.crowdcell .crowd { max-width: 220px; }
   td.pricecell { width: 190px; }
@@ -208,7 +208,7 @@
   /* The full table needs about 880px. Below that, each session becomes a compact card:
      time and wave, level and weather, crowd, then price and Book. */
   @media (max-width: 920px) {
-    table, tbody, tr, td, tr.day th { display: block; width: auto; }
+    table, tbody, tr, td { display: block; width: auto; }
     table { background: none; border: 0; border-radius: 0; overflow: visible; }
     thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     tbody { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
@@ -569,6 +569,8 @@ function rankingText(pool) {
     " Sessions past the 7-day forecast come last.";
 }
 
+const SORT_LABEL = { crowd: "fewest people first", price: "lowest price first", weather: "best weather first" };
+
 const bookBtn = s => `<button type="button" class="book" data-book="${s.timeslot_id}" aria-haspopup="dialog"
   aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book</button>`;
 
@@ -607,10 +609,13 @@ function renderPicks() {
 
 function renderTable() {
   const lv = myLevels();
+  // 1 list in the chosen sort order, full sessions last.
   const rows = slots.filter(s => lv.has(s.level) && inRange(s) && inTod(s) && inWave(s) && (state.showFull || s.places_left > 0))
-    .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start) || a.wave.localeCompare(b.wave));
+    .map(s => ({ s, c: crowd(s) }))
+    .sort((a, b) => (a.c.key === "full") - (b.c.key === "full") || compareByPriority(a, b) || a.s.wave.localeCompare(b.s.wave))
+    .map(x => x.s);
   const open = rows.filter(s => s.places_left > 0).length;
-  document.getElementById("count").textContent = `${open} open session${open === 1 ? "" : "s"}`;
+  document.getElementById("count").textContent = `${open} open session${open === 1 ? "" : "s"}, ${SORT_LABEL[state.priority]}`;
 
   if (!rows.length) {
     document.getElementById("table").innerHTML = `<div class="empty">Nothing matches these filters.
@@ -619,23 +624,15 @@ function renderTable() {
       ${state.wave !== "all" ? `<button data-set="wave:all">Both waves</button>` : ""}</div>`;
     return;
   }
-  const cols = FORECAST ? 7 : 6;
-  let html = `<table><thead><tr><th scope="col">Time</th><th scope="col">Level</th><th scope="col">Wave</th>` +
+  let html = `<table><thead><tr><th scope="col">When</th><th scope="col">Level</th><th scope="col">Wave</th>` +
     `${FORECAST ? `<th scope="col">Weather</th>` : ""}<th scope="col">Crowd</th><th scope="col" id="priceHead"></th>` +
-    `<th scope="col"><span class="sr">Book</span></th></tr></thead>`;
-  let day = null;
+    `<th scope="col"><span class="sr">Book</span></th></tr></thead><tbody>`;
   for (const s of rows) {
-    if (s.date !== day) {
-      if (day) html += `</tbody>`;
-      day = s.date;
-      const n = rows.filter(r => r.date === day && r.places_left > 0).length;
-      const pref = state.days.has(weekday(s)) ? `<span class="pref">Preferred day</span>` : "";
-      html += `<tbody><tr class="day"><th colspan="${cols}" scope="rowgroup">${fmtDayLong(day)}<span>${n} open</span>${pref}</th></tr>`;
-    }
     const c = crowd(s);
     const full = c.key === "full";
+    const pref = state.days.has(weekday(s)) ? `<span class="pref">Preferred day</span>` : "";
     html += `<tr class="slot${full ? " full" : ""}">
-      <td class="time">${s.start} to ${s.end}</td><td class="lvl">${pill(s.level)}</td><td class="wave">${s.wave}<span class="m"> wave</span></td>
+      <td class="time"><span class="d">${fmtDay(s.date)}</span>${pref} ${s.start} to ${s.end}</td><td class="lvl">${pill(s.level)}</td><td class="wave">${s.wave}<span class="m"> wave</span></td>
       ${FORECAST ? `<td class="wxcell">${weatherHtml(s)}</td>` : ""}
       <td class="crowdcell">${crowdHtml(c)}</td><td class="pricecell">${full ? "" : priceHtml(s)}</td>
       <td class="bookcell">${full ? "" : bookBtn(s)}</td></tr>`;
