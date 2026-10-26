@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wave Sessions</title>
+<title>Alaïa Bay sessions</title>
 <style>
   :root {
     --bg: #f6f5f2;
@@ -24,10 +24,11 @@
     margin: 0; background: var(--bg); color: var(--ink);
     font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
   }
+  ::selection { background: #cfe2ee; color: var(--ink); }
   .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 64px; }
   button { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  a { color: var(--accent); }
+  a { color: var(--accent); text-underline-offset: 2px; }
 
   header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
   h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
@@ -43,48 +44,71 @@
 
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
   section { margin-bottom: 32px; }
+  .sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .count { font-size: 13px; color: var(--muted); white-space: nowrap; }
 
-  /* Profile summary + settings dialog */
+  /* Profile summary */
   .profile {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
     background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
   }
   .profile .who { font-size: 14px; color: var(--muted); }
   .profile .who b { color: var(--ink); font-weight: 600; }
   .profile .edit { margin-left: auto; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 14px; font-size: 14px; cursor: pointer; }
   .profile .edit:hover { border-color: #c9c6bf; }
-  dialog { border: 0; border-radius: 14px; padding: 0; width: min(720px, 92vw); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
+
+  /* Sort and filters, on the page */
+  .controls { display: grid; gap: 10px; margin-bottom: 28px; }
+  .ctl { display: flex; align-items: center; gap: 10px; }
+  .seg-label { font-size: 13px; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
+  .seg button { border: 0; background: none; padding: 7px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button:hover { background: var(--soft); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .filters summary { font-size: 13px; color: var(--muted); cursor: pointer; padding: 7px 0; list-style-position: inside; }
+  .filters summary b { color: var(--ink); font-weight: 600; }
+  .filter-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding-top: 8px; }
+  .fpair { display: flex; align-items: center; gap: 10px; }
+  .fpair .seg-label:empty { display: none; }
+  label.check { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  label.check input { accent-color: var(--ink); width: 16px; height: 16px; }
+
+  /* Dialogs */
+  dialog {
+    border: 0; border-radius: 14px; padding: 0; width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 32px);
+    overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink);
+  }
   dialog::backdrop { background: rgba(28,29,31,.35); }
-  dialog form { padding: 24px 28px; display: grid; gap: 18px; }
+  dialog form, .handoff { padding: 24px 28px; display: grid; gap: 18px; }
   dialog h3 { margin: 0; font-size: 20px; }
   dialog .hint { margin: 4px 0 0; }
   fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
-  legend { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; padding: 0; margin-bottom: 8px; }
+  legend { font-size: 14px; color: var(--ink); font-weight: 650; padding: 0; margin-bottom: 8px; }
   fieldset .seg { justify-self: start; }
-  .filter-grid { display: grid; grid-template-columns: 56px auto; gap: 10px 8px; align-items: center; justify-content: start; }
-  .filter-grid .seg { justify-self: start; }
-  .filters { font-size: 13px; color: var(--muted); }
-  .filters b { color: var(--ink); font-weight: 600; }
-  .weekdays { display: flex; gap: 6px; }
-  .weekdays button { width: 52px; padding: 7px 0; border: 1px solid var(--line); background: var(--card); border-radius: 8px; font-size: 13px; cursor: pointer; color: var(--muted); }
-  .weekdays button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
-  .subhead { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
-  .pref { font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 8px; }
-  .actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
-  .blocked { font-size: 13px; color: var(--busy); }
-  .primary { background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .primary:disabled { opacity: .4; cursor: not-allowed; }
-
-  /* Level ladder inside settings */
-  .ladder { display: flex; flex-wrap: wrap; gap: 6px; }
-  .rung {
-    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px;
-    border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer; font-size: 14px;
-  }
-  .rung .step { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .rung[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
-  .rung[aria-pressed="false"] { color: var(--muted); }
+  #settings.first .later { display: none; }
   .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .blocked { font-size: 13px; color: var(--busy); }
+  .primary {
+    background: var(--ink); color: #fff; border: 0; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .primary:hover { background: #000; }
+  .ghost { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+  .ghost:hover { border-color: #c9c6bf; }
+
+  /* Multi-select toggles (levels, preferred days): outline plus tick when on */
+  .toggle { border: 1px solid var(--line); background: var(--card); border-radius: 8px; cursor: pointer; }
+  .toggle[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--soft); }
+  .toggle .tick { width: 14px; height: 14px; flex: none; display: none; }
+  .toggle[aria-pressed="true"] .tick { display: block; }
+  .weekdays { display: flex; flex-wrap: wrap; gap: 6px; }
+  .weekdays button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 52px; padding: 7px 8px; font-size: 13px; color: var(--muted); }
+  .weekdays button[aria-pressed="true"] { color: var(--ink); font-weight: 600; }
+  .ladder { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rung { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; font-size: 14px; }
+  .rung .step { font-size: 11px; color: var(--muted); }
 
   .pill {
     display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 13px; font-weight: 650;
@@ -98,12 +122,10 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
     display: grid; gap: 10px; align-content: start;
   }
-  .pick .when { font-size: 18px; font-weight: 650; }
+  .pick .when { font-size: 18px; font-weight: 650; margin: 0; }
   .pick .meta { color: var(--muted); font-size: 13px; }
   .pick .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .pick .book { white-space: nowrap; }
-  .pick .book { font-size: 14px; font-weight: 600; text-decoration: none; }
-  .pick .book:hover { text-decoration: underline; }
+  .pick .also { font-size: 12px; color: var(--muted); }
 
   .crowd { display: grid; gap: 4px; }
   .crowd .lbl { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; white-space: nowrap; }
@@ -113,37 +135,36 @@
   .meter i { display: block; height: 100%; border-radius: 4px; }
 
   .price { font-weight: 650; font-variant-numeric: tabular-nums; }
-  .price.unknown { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .price.unknown { font-weight: 600; color: var(--muted); }
   .tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
   .tag.deal { color: var(--deal); background: #f3edfc; font-weight: 600; }
   .tag.free { color: var(--accent); }
   .tag.kind { color: var(--muted); }
 
-  /* Toolbar */
-  .toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
-  .seg button { border: 0; background: none; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-  .seg button + button { border-left: 1px solid var(--line); }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-  .seg-label { font-size: 12px; color: var(--muted); margin-right: 6px; }
-  label.check { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
-  .count { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .book {
+    border: 1px solid var(--accent); color: var(--accent); background: var(--card); border-radius: 8px;
+    padding: 5px 14px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .book:hover { background: var(--accent); color: #fff; }
 
   /* Session table */
   table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 10px 14px; background: #faf9f6; border-bottom: 1px solid var(--line); }
+  thead th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 10px 14px; background: #faf9f6; border-bottom: 1px solid var(--line); }
   td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 14px; }
-  tr:last-child td { border-bottom: 0; }
-  tr.day td { background: #faf9f6; font-weight: 650; font-size: 14px; padding-top: 14px; }
-  tr.day td span { font-weight: 400; color: var(--muted); margin-left: 8px; font-size: 13px; }
+  tbody:last-child tr:last-child td { border-bottom: 0; }
+  tr.day th { text-align: left; background: #faf9f6; font-weight: 650; font-size: 14px; padding: 14px 14px 10px; border-bottom: 1px solid var(--line); }
+  tr.day th span { font-weight: 400; color: var(--muted); margin-left: 8px; font-size: 13px; }
+  tr.day th .pref { color: var(--accent); font-weight: 600; font-size: 12px; }
   tr.full td { color: var(--full); }
   tr.full .pill { opacity: .55; }
   td.time { font-variant-numeric: tabular-nums; font-weight: 600; width: 130px; white-space: nowrap; }
-  td.bookcell a { white-space: nowrap; }
   td.crowdcell { width: 240px; }
   td.crowdcell .crowd { max-width: 220px; }
-  td.pricecell { width: 210px; }
-  td.bookcell { width: 70px; text-align: right; }
+  td.pricecell { width: 190px; }
+  td.bookcell { width: 80px; text-align: right; }
+  td.wxcell { width: 160px; }
+  .m { display: none; }
+  #table { overflow-x: auto; }
   .empty { padding: 28px; text-align: center; color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; }
   .empty button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 5px 12px; margin-left: 6px; cursor: pointer; }
 
@@ -151,15 +172,63 @@
   .wx { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 14px; }
   .wx img { width: 28px; height: 28px; }
   .wx b { font-weight: 650; font-variant-numeric: tabular-nums; }
-  .wx .note { font-size: 12px; color: var(--accent); font-weight: 600; }
+  .wx .note { font-size: 12px; color: var(--moderate); font-weight: 600; }
   .wx.none { color: var(--muted); font-size: 12px; }
-  td.wxcell { width: 170px; }
-  @media (max-width: 760px) {
-    .picks { grid-template-columns: 1fr; }
-  }
+
+  /* Booking handoff */
+  .slotsum { display: grid; grid-template-columns: 64px 1fr; gap: 8px 12px; margin: 0; font-size: 15px; }
+  .slotsum dt { color: var(--muted); font-size: 13px; padding-top: 2px; }
+  .slotsum dd { margin: 0; font-weight: 600; }
+  .how { margin: 0; font-size: 14px; }
+  .copymsg { font-size: 13px; color: var(--quiet); margin-right: auto; }
 
   footer { color: var(--muted); font-size: 12px; margin-top: 28px; line-height: 1.6; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  footer p { margin: 0 0 6px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 20px 16px 48px; }
+    header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .freshness { justify-items: start; }
+    .stamp, .refresh-msg { text-align: left; }
+    .picks { grid-template-columns: 1fr; }
+
+    .controls { gap: 6px; }
+    .ctl.sort { flex-direction: column; align-items: stretch; gap: 6px; }
+    .ctl.sort .seg { display: flex; }
+    .ctl.sort .seg button { flex: 1; padding: 10px 6px; }
+    .filter-grid { display: grid; gap: 10px; }
+    .fpair .seg-label { width: 40px; flex: none; }
+    .fpair .seg-label:empty { display: block; }
+    .filter-grid .seg button { padding: 9px 9px; }
+    dialog form, .handoff { padding: 20px; }
+    td.bookcell .book { min-height: 44px; padding: 0 22px; }
+  }
+
+  /* The full table needs about 880px. Below that, each session becomes a compact card:
+     time and wave, level and weather, crowd, then price and Book. */
+  @media (max-width: 920px) {
+    table, tbody, tr, td, tr.day th { display: block; width: auto; }
+    table { background: none; border: 0; border-radius: 0; overflow: visible; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    tbody { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    tbody:last-child tr:last-child td { border-bottom: 0; }
+    tr.slot {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line);
+      grid-template-areas: "time wave" "level wx" "crowd crowd" "price book";
+    }
+    tbody tr.slot:last-child { border-bottom: 0; }
+    tr.slot td { padding: 0; border: 0; width: auto; }
+    td.time { grid-area: time; }
+    td.lvl { grid-area: level; }
+    td.wave { grid-area: wave; text-align: right; color: var(--muted); font-size: 13px; }
+    td.wxcell { grid-area: wx; text-align: right; }
+    td.crowdcell { grid-area: crowd; }
+    td.crowdcell .crowd { max-width: none; }
+    td.pricecell { grid-area: price; align-self: center; }
+    td.bookcell { grid-area: book; }
+    .m { display: inline; }
+  }
 </style>
 </head>
 <body>
@@ -179,18 +248,36 @@
 
   <div class="profile" id="profile"></div>
 
+  <div class="controls">
+    <div class="ctl sort">
+      <span class="seg-label" id="l-sort">Sort by</span>
+      <span class="seg" data-key="priority" role="group" aria-labelledby="l-sort">
+        <button type="button" data-v="crowd">Fewest people</button><button type="button" data-v="price">Lowest price</button><button type="button" data-v="weather" id="weatherPriority">Best weather</button>
+      </span>
+    </div>
+    <details class="filters" id="filters">
+      <summary>Filters: <span id="filterSummary"></span></summary>
+      <div class="filter-grid">
+        <div class="fpair"><span class="seg-label" id="l-days">Days</span><span class="seg" data-key="range" role="group" aria-labelledby="l-days">
+          <button type="button" data-v="week">Next 7 days</button><button type="button" data-v="weekend">Weekends</button><button type="button" data-v="all">All</button>
+        </span></div>
+        <div class="fpair"><span class="seg-label" id="l-time">Time</span><span class="seg" data-key="tod" role="group" aria-labelledby="l-time">
+          <button type="button" data-v="any">Any</button><button type="button" data-v="am">Before 12</button><button type="button" data-v="pm">12 to 17</button><button type="button" data-v="eve">After 17</button>
+        </span></div>
+        <div class="fpair"><span class="seg-label" id="l-wave">Wave</span><span class="seg" data-key="wave" role="group" aria-labelledby="l-wave">
+          <button type="button" data-v="all">Both</button><button type="button" data-v="Left">Left</button><button type="button" data-v="Right">Right</button>
+        </span></div>
+        <div class="fpair"><span class="seg-label" aria-hidden="true"></span><label class="check"><input type="checkbox" id="showFull"> Show full sessions</label></div>
+      </div>
+    </details>
+  </div>
+
   <dialog id="settings" aria-labelledby="h-settings">
     <form method="dialog">
-      <h3 id="h-settings">Settings</h3>
-      <p class="hint">Saved in this browser. Change them any time from the Settings button.</p>
-
-      <fieldset>
-        <legend>Who is surfing?</legend>
-        <div class="seg" data-setting="surfer">
-          <button type="button" data-v="adult">Adult</button><button type="button" data-v="kid">Kid</button>
-        </div>
-        <p class="hint">Prices show the kid rate when available.</p>
-      </fieldset>
+      <div>
+        <h3 id="h-settings">Settings</h3>
+        <p class="hint" id="settingsHint"></p>
+      </div>
 
       <fieldset>
         <legend>Your levels</legend>
@@ -199,34 +286,17 @@
       </fieldset>
 
       <fieldset>
-        <legend>What matters most when picking a session?</legend>
-        <div class="seg" data-setting="priority">
-          <button type="button" data-v="crowd">Fewest people</button><button type="button" data-v="price">Lowest price</button><button type="button" data-v="weather" id="weatherPriority">Best weather</button>
+        <legend>Who is surfing?</legend>
+        <div class="seg" data-setting="surfer" role="group" aria-label="Who is surfing?">
+          <button type="button" data-v="adult">Adult</button><button type="button" data-v="kid">Kid</button>
         </div>
-        <p class="hint" id="priorityHint"></p>
+        <p class="hint">Prices show the kid rate when the session has one.</p>
       </fieldset>
 
-      <fieldset>
+      <fieldset class="later">
         <legend>Preferred days</legend>
         <div class="weekdays" id="weekdays"></div>
         <p class="hint">Optional. Sessions on these days are ranked first.</p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Which sessions to show</legend>
-        <div class="filter-grid">
-          <span class="seg-label">Days</span><span class="seg" data-key="range">
-            <button type="button" data-v="week">Next 7 days</button><button type="button" data-v="weekend">Weekends</button><button type="button" data-v="all">All</button>
-          </span>
-          <span class="seg-label">Time</span><span class="seg" data-key="tod">
-            <button type="button" data-v="any">Any</button><button type="button" data-v="am">Before 12:00</button><button type="button" data-v="pm">12:00 to 17:00</button><button type="button" data-v="eve">After 17:00</button>
-          </span>
-          <span class="seg-label">Wave</span><span class="seg" data-key="wave">
-            <button type="button" data-v="all">Both</button><button type="button" data-v="Left">Left</button><button type="button" data-v="Right">Right</button>
-          </span>
-          <span></span><label class="check"><input type="checkbox" id="showFull"> Show full sessions</label>
-        </div>
-        <p class="hint">Applies to the best sessions and the full list.</p>
       </fieldset>
 
       <div class="actions">
@@ -236,27 +306,43 @@
     </form>
   </dialog>
 
+  <dialog id="handoff" aria-labelledby="h-handoff">
+    <div class="handoff">
+      <h3 id="h-handoff">Book this session on Alaïa Bay</h3>
+      <dl class="slotsum" id="slotSum"></dl>
+      <p class="how" id="how"></p>
+      <div class="actions">
+        <span class="copymsg" id="copyMsg" aria-live="polite"></span>
+        <button type="button" class="ghost" id="handoffClose">Close</button>
+        <button type="button" class="ghost" id="copySlot">Copy details</button>
+        <a class="primary" href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">Open booking site ↗</a>
+      </div>
+    </div>
+  </dialog>
+
   <section aria-labelledby="h-picks">
     <h2 id="h-picks">Best sessions for you</h2>
-    <p class="subhead" id="picksWhy"></p>
+    <p class="subhead hint" id="picksWhy"></p>
+    <p class="sr" id="pickAnnounce" aria-live="polite"></p>
     <div class="picks" id="picks"></div>
   </section>
 
   <section aria-labelledby="h-all">
-    <h2 id="h-all">All sessions at your levels</h2>
-    <div class="toolbar">
-      <span class="filters" id="filterSummary"></span>
+    <div class="sechead">
+      <h2 id="h-all">All sessions at your levels</h2>
       <span class="count" id="count" aria-live="polite"></span>
     </div>
     <div id="table"></div>
   </section>
 
   <footer>
-    Unofficial personal tool, not made or endorsed by Alaïa Bay.
-    "Booked" is an estimate: capacity is taken as the most places ever seen free for that level (at least 12).
-    Places and prices come from each slot's booking popup at the time above, so check before you go.
-    Booking happens on <a href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">booking.alaiabay.ch</a>.
-    <span id="weatherCredit"></span>
+    <p>Unofficial personal tool, not made or endorsed by Alaïa Bay. Booking happens on
+      <a href="https://booking.alaiabay.ch/activity-agenda" target="_blank" rel="noopener">booking.alaiabay.ch</a>.</p>
+    <p>"Booked" is an estimate: capacity is taken as the most places ever seen free for that level (at least 12).
+      Places and prices come from each slot's booking popup at the time above, so check before you go.</p>
+    <p>Guided: a guide in the water, no coaching. Coached: a coach in the water. Deal: a reduced price on the booking site.
+      ~CHF: the slot listed no price, so the usual price for that level is shown.</p>
+    <p id="weatherCredit"></p>
   </footer>
 </div>
 
@@ -267,6 +353,7 @@ const GENERATED_ISO = "/*GENERATED_ISO*/";
 const BOOK_URL = "https://booking.alaiabay.ch/activity-agenda";
 const FORECAST = /*FORECAST*/null;
 const ICON_URL = n => `https://www.meteoswiss.admin.ch/static/resources/weather-symbols/${n}.svg`;
+const TICK = `<svg class="tick" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // Level ladder as listed on the booking site, easiest first. Off-ladder sessions go last.
 const LADDER = ["Rookie", "Rookie Rider", "Cruiser", "Intermediate Cruiser", "Advanced Cruiser Summer Edition",
@@ -276,9 +363,9 @@ const rank = l => { const i = LADDER.indexOf(l); return i < 0 ? 99 : i; };
 
 const now = new Date();
 const slots = DATA.filter(s => !s.past && new Date(`${s.date}T${s.start}:00`) > now);
+const byId = Object.fromEntries(slots.map(s => [s.timeslot_id, s]));
 const levels = [...new Set(DATA.map(s => s.level))].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 const colorOf = Object.fromEntries(DATA.map(s => [s.level, s.level_color]));
-const ladderLevels = levels.filter(l => rank(l) < 99);
 
 // Capacity per level: the most places ever seen free, never below 12.
 const capacity = {};
@@ -305,10 +392,13 @@ function adultPrice(s) {
   return (adult || p.reduce((a, b) => (a.price_chf <= b.price_chf ? a : b))).price_chf;
 }
 
+// Pick whichever text colour, white or ink, contrasts more with the level colour.
 function lvlInk(hex) {
   const n = parseInt(hex.slice(1).padEnd(6, "0"), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
   const lum = [r, g, b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
-  return (.2126 * lum[0] + .7152 * lum[1] + .0722 * lum[2]) > .35 ? "#1c1d1f" : "#ffffff";
+  const L = .2126 * lum[0] + .7152 * lum[1] + .0722 * lum[2];
+  const INK_L = 0.0117; // #1c1d1f
+  return (L + .05) / (INK_L + .05) >= 1.05 / (L + .05) ? "#1c1d1f" : "#ffffff";
 }
 const pill = l => `<span class="pill" style="--lvl:${colorOf[l]};--lvl-ink:${lvlInk(colorOf[l])}">${l}</span>`;
 
@@ -329,18 +419,21 @@ function kidPrice(s) {
 
 function priceHtml(s) {
   const isKid = state.surfer === "kid";
+  const kid = kidPrice(s), adult = adultPrice(s);
   // Kids pay the kid rate when the slot has one; otherwise the only listed price applies.
-  const p = isKid ? (kidPrice(s) ?? adultPrice(s)) : adultPrice(s);
+  const p = isKid ? (kid ?? adult) : adult;
   const tags = [];
   const main = (s.products || []).find(x => /adult/i.test(x.name)) || (s.products || [])[0];
   if (main && /at CHF\s*\d+/i.test(main.name)) tags.push(`<span class="tag deal">Deal</span>`);
-  if (main && /coached/i.test(main.name)) tags.push(`<span class="tag kind" title="Session with a coach in the water">Coached</span>`);
-  if (main && /guided/i.test(main.name)) tags.push(`<span class="tag kind" title="Session with a guide, no coaching">Guided</span>`);
+  // 1 session kind per slot: some products are sold as "Coached or Guided".
+  const coached = main && /coached/i.test(main.name), guided = main && /guided/i.test(main.name);
+  if (coached || guided) tags.push(`<span class="tag kind">${coached && guided ? "Coached or guided" : coached ? "Coached" : "Guided"}</span>`);
   if (/free surf/i.test(s.price_category)) tags.push(`<span class="tag free">Free Surf</span>`);
+  if (isKid && kid == null && adult != null) tags.push(`<span class="tag kind">Adult rate</span>`);
   const usual = (isKid ? usualKidPrice : usualPrice)[s.level];
-  const price = p != null
-    ? `<span class="price">CHF ${p.toFixed(0)}</span>`
-    : `<span class="price unknown">Price not listed${usual ? `, usually CHF ${usual}` : ""}</span>`;
+  const price = p != null ? `<span class="price">CHF ${p.toFixed(0)}</span>`
+    : usual ? `<span class="price unknown" title="No price listed for this slot; usually CHF ${usual} at this level">~CHF ${usual}<span class="sr"> usually, not listed for this slot</span></span>`
+    : `<span class="price unknown">Price not listed</span>`;
   return `${price} ${tags.join(" ")}`;
 }
 
@@ -368,7 +461,7 @@ function weatherHtml(s) {
   if (w.wind >= 20) notes.push(`Wind ${w.wind} km/h`);
   const title = `${w.temp.toFixed(0)}°C, rain chance ${w.rain_pct}%, wind ${w.wind} km/h (MeteoSwiss)`;
   return `<span class="wx" title="${title}"><img src="${ICON_URL(w.icon)}" alt="" loading="lazy">` +
-    `<b>${w.temp.toFixed(0)}°</b>${notes.length ? `<span class="note">${notes.join(", ")}</span>` : ""}` +
+    `<b aria-hidden="true">${w.temp.toFixed(0)}°</b>${notes.length ? `<span class="note" aria-hidden="true">${notes.join(", ")}</span>` : ""}` +
     `<span class="sr">${title}</span></span>`;
 }
 
@@ -379,14 +472,10 @@ function weatherRank(s) {
   return w ? Math.round(w.rain_pct / 10) * 100 - Math.round(w.temp) : 1e6;
 }
 
-if (FORECAST) document.getElementById("weatherCredit").textContent =
-  `Weather: MeteoSwiss open data, local forecast for ${FORECAST.point}, which is also what the MeteoSwiss app shows.`;
-// Without a forecast there is nothing to rank by.
-document.getElementById("weatherPriority").hidden = !FORECAST;
-
 // ---- state ----
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const weekday = s => WEEKDAYS[(new Date(s.date + "T12:00:00").getDay() + 6) % 7];
+const PRIORITIES = ["crowd", "price", ...(FORECAST ? ["weather"] : [])];
 
 const state = { levels: new Set(), surfer: "adult", priority: "crowd", days: new Set(), range: "week", tod: "any", wave: "all", showFull: false };
 let hasSettings = false;
@@ -394,7 +483,7 @@ try {
   const o = JSON.parse(localStorage.getItem("waveView2") || "{}");
   if (Array.isArray(o.levels)) state.levels = new Set(o.levels.filter(l => levels.includes(l)));
   if (Array.isArray(o.days)) state.days = new Set(o.days.filter(d => WEEKDAYS.includes(d)));
-  if (["crowd", "price", ...(FORECAST ? ["weather"] : [])].includes(o.priority)) state.priority = o.priority;
+  if (PRIORITIES.includes(o.priority)) state.priority = o.priority;
   for (const k of ["surfer", "range", "tod", "wave", "showFull"]) if (k in o) state[k] = o[k];
   hasSettings = state.levels.size > 0;
 } catch (e) {}
@@ -413,54 +502,43 @@ function inTod(s) {
   const h = +s.start.slice(0, 2);
   return state.tod === "any" || (state.tod === "am" && h < 12) || (state.tod === "pm" && h >= 12 && h < 17) || (state.tod === "eve" && h >= 17);
 }
+const inWave = s => state.wave === "all" || s.wave === state.wave;
 
 // ---- render ----
 function renderLadder() {
-  const el = document.getElementById("ladder");
-  el.innerHTML = levels.map(l => {
-    const i = ladderLevels.indexOf(l);
-    const step = `<span class="step">${i < 0 ? "event" : `${i + 1}/${ladderLevels.length}`}</span>`;
-    return `<button type="button" class="rung" data-level="${l}" aria-pressed="${state.levels.has(l)}">${pill(l)}${step}</button>`;
-  }).join("");
+  document.getElementById("ladder").innerHTML = levels.map(l =>
+    `<button type="button" class="rung toggle" data-level="${l}" aria-pressed="${state.levels.has(l)}">${TICK}${pill(l)}${rank(l) === 99 ? `<span class="step">event</span>` : ""}</button>`
+  ).join("");
 }
 function syncSettings() {
   document.querySelectorAll(".rung").forEach(b => b.setAttribute("aria-pressed", state.levels.has(b.dataset.level)));
   document.querySelectorAll("[data-setting] button").forEach(b =>
     b.setAttribute("aria-pressed", b.dataset.v === state[b.parentElement.dataset.setting]));
   document.querySelectorAll("#weekdays button").forEach(b => b.setAttribute("aria-pressed", state.days.has(b.dataset.day)));
-  document.getElementById("priorityHint").textContent = {
-    crowd: "Least booked sessions first, then the cheapest.",
-    price: "Cheapest sessions first, then the least booked.",
-    weather: "Lowest chance of rain and warmest first, then the least booked. Uses the MeteoSwiss forecast, which covers about 7 days.",
-  }[state.priority];
-  const noLevels = state.levels.size === 0;
-  document.querySelector("#settings .primary").disabled = noLevels;
-  document.getElementById("doneReason").textContent = noLevels ? "Pick at least 1 level under Your levels to continue." : "";
+  if (state.levels.size) document.getElementById("doneReason").textContent = "";
 }
+const sortedDays = () => WEEKDAYS.filter(d => state.days.has(d));
 function renderProfile() {
   const lv = [...state.levels].sort((a, b) => rank(a) - rank(b));
   document.getElementById("profile").innerHTML = `
     <span class="who">Surfer <b>${state.surfer === "kid" ? "Kid" : "Adult"}</b></span>
-    <span class="who">·</span>
+    <span class="who" aria-hidden="true">·</span>
     <span class="who">Levels</span> ${lv.length ? lv.map(pill).join(" ") : `<span class="who"><b>all</b></span>`}
-    <span class="who">·</span>
-    <span class="who">Priority <b>${PRIORITY_LABEL[state.priority]}</b>${state.days.size ? `, ${sortedDays().join(", ")} first` : ""}</span>
+    ${state.days.size ? `<span class="who" aria-hidden="true">·</span><span class="who">Preferred <b>${sortedDays().join(", ")}</b></span>` : ""}
     <button class="edit" id="openSettings" aria-haspopup="dialog">Settings</button>`;
 }
 function syncToolbar() {
   document.querySelectorAll(".seg[data-key]").forEach(seg =>
-    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state[seg.dataset.key])));
+    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === String(state[seg.dataset.key]))));
   document.getElementById("showFull").checked = state.showFull;
-  const label = key => document.querySelector(`.seg[data-key="${key}"] [data-v="${state[key]}"]`).textContent;
+  const label = { range: { week: "next 7 days", weekend: "weekends", all: "all days" },
+    tod: { any: "any time", am: "before 12:00", pm: "12:00 to 17:00", eve: "after 17:00" },
+    wave: { all: "both waves", Left: "Left wave", Right: "Right wave" } };
   document.getElementById("filterSummary").innerHTML =
-    `Days <b>${label("range")}</b> · Time <b>${label("tod")}</b> · Wave <b>${label("wave")}</b>` +
-    (state.showFull ? " · <b>including full</b>" : "");
+    ["range", "tod", "wave"].map(k => `<b>${label[k][state[k]]}</b>`).join(", ") + (state.showFull ? ", <b>including full</b>" : "");
   const head = document.getElementById("priceHead");
   if (head) head.textContent = state.surfer === "kid" ? "Kid price" : "Adult price";
 }
-
-const PRIORITY_LABEL = { crowd: "fewest people", price: "lowest price", weather: "best weather" };
-const sortedDays = () => WEEKDAYS.filter(d => state.days.has(d));
 
 // Price used for ranking: the surfer's listed price, else the level's usual one.
 function rankPrice(s) {
@@ -482,34 +560,54 @@ function compareByPriority(a, b) {
   return order.find(d => d !== 0) || timeDiff;
 }
 
+function rankingText(pool) {
+  if (state.priority === "price") return "lowest price first, then fewest people.";
+  if (state.priority !== "weather") return "fewest people first, then lowest price.";
+  // When every session is dry, rain can't separate them, so say what actually decides.
+  const dry = pool.every(s => { const w = sessionWeather(s); return !w || w.rain_pct < 10; });
+  return (dry ? "dry in the forecast, so warmest first, then fewest people." : "lowest chance of rain first, then warmest, then fewest people.") +
+    " Sessions past the 7-day forecast come last.";
+}
+
+const bookBtn = s => `<button type="button" class="book" data-book="${s.timeslot_id}" aria-haspopup="dialog"
+  aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book</button>`;
+
+let lastTop = "";
 function renderPicks() {
   const lv = myLevels();
   // With no levels picked, leave events (Special, Girls Only) out of the picks: their big capacity always wins.
   const pool = slots.filter(s => lv.has(s.level) && s.places_left > 0 && (state.levels.size || rank(s.level) < 99) &&
-    inRange(s) && inTod(s) && (state.wave === "all" || s.wave === state.wave));
-  const best = pool
-    .map(s => ({ s, c: crowd(s) }))
-    .sort(compareByPriority)
-    .slice(0, 3);
-  document.getElementById("picksWhy").textContent =
-    (state.days.size ? `${sortedDays().join(", ")} first, then ranked` : "Ranked") +
-    ` by ${PRIORITY_LABEL[state.priority]}. Change this in Settings.`;
-  document.getElementById("picks").innerHTML = best.length ? best.map(({ s, c }) => `
-    <article class="pick">
-      <div class="when">${fmtDay(s.date)} · ${s.start}</div>
+    inRange(s) && inTod(s) && inWave(s));
+  // 1 pick per start time: the Left and Right wave of the same hour are 1 decision.
+  const seen = new Set(), best = [];
+  for (const x of pool.map(s => ({ s, c: crowd(s) })).sort(compareByPriority)) {
+    const key = x.s.date + x.s.start;
+    if (seen.has(key)) continue;
+    seen.add(key); best.push(x);
+    if (best.length === 3) break;
+  }
+  const why = (state.days.size ? `${sortedDays().join(", ")} first, then ` : "") + rankingText(pool);
+  document.getElementById("picksWhy").textContent = why[0].toUpperCase() + why.slice(1);
+  document.getElementById("picks").innerHTML = best.length ? best.map(({ s, c }) => {
+    const also = pool.filter(o => o !== s && o.date === s.date && o.start === s.start)
+      .map(o => `${o.wave} wave${o.level !== s.level ? `, ${o.level}` : ""}, ${o.places_left} free`);
+    return `<article class="pick" aria-labelledby="pick-${s.timeslot_id}">
+      <h3 class="when" id="pick-${s.timeslot_id}">${fmtDay(s.date)} · ${s.start}</h3>
       <div class="row">${pill(s.level)}<span class="meta">${s.wave} wave, until ${s.end}</span></div>
       ${FORECAST ? `<div class="row">${weatherHtml(s)}</div>` : ""}
       ${crowdHtml(c)}
-      <div class="row"><span>${priceHtml(s)}</span>
-        <a class="book" href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a></div>
-    </article>`).join("")
-    : `<div class="empty">No open sessions at your levels in the data.</div>`;
+      <div class="row"><span>${priceHtml(s)}</span>${bookBtn(s)}</div>
+      ${also.length ? `<div class="also">Also at this time: ${also.join("; ")}</div>` : ""}
+    </article>`;
+  }).join("")
+    : `<div class="empty">No open sessions match your levels and filters.</div>`;
+  const top = best[0] ? `Top pick: ${fmtDayLong(best[0].s.date)}, ${best[0].s.start}, ${best[0].s.level}, ${best[0].s.wave} wave.` : "No open sessions match.";
+  if (top !== lastTop) { if (lastTop) document.getElementById("pickAnnounce").textContent = top; lastTop = top; }
 }
 
 function renderTable() {
   const lv = myLevels();
-  const rows = slots.filter(s => lv.has(s.level) && inRange(s) && inTod(s) &&
-    (state.wave === "all" || s.wave === state.wave) && (state.showFull || s.places_left > 0))
+  const rows = slots.filter(s => lv.has(s.level) && inRange(s) && inTod(s) && inWave(s) && (state.showFull || s.places_left > 0))
     .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start) || a.wave.localeCompare(b.wave));
   const open = rows.filter(s => s.places_left > 0).length;
   document.getElementById("count").textContent = `${open} open session${open === 1 ? "" : "s"}`;
@@ -517,26 +615,30 @@ function renderTable() {
   if (!rows.length) {
     document.getElementById("table").innerHTML = `<div class="empty">Nothing matches these filters.
       ${state.range !== "all" ? `<button data-set="range:all">Show all days</button>` : ""}
-      ${state.tod !== "any" ? `<button data-set="tod:any">Any time</button>` : ""}</div>`;
+      ${state.tod !== "any" ? `<button data-set="tod:any">Any time</button>` : ""}
+      ${state.wave !== "all" ? `<button data-set="wave:all">Both waves</button>` : ""}</div>`;
     return;
   }
-  const wxHead = FORECAST ? `<th>Weather</th>` : "";
   const cols = FORECAST ? 7 : 6;
-  let html = `<table><thead><tr><th>Time</th><th>Level</th><th>Wave</th>${wxHead}<th>Crowd</th><th id="priceHead"></th><th></th></tr></thead><tbody>`;
+  let html = `<table><thead><tr><th scope="col">Time</th><th scope="col">Level</th><th scope="col">Wave</th>` +
+    `${FORECAST ? `<th scope="col">Weather</th>` : ""}<th scope="col">Crowd</th><th scope="col" id="priceHead"></th>` +
+    `<th scope="col"><span class="sr">Book</span></th></tr></thead>`;
   let day = null;
   for (const s of rows) {
     if (s.date !== day) {
+      if (day) html += `</tbody>`;
       day = s.date;
       const n = rows.filter(r => r.date === day && r.places_left > 0).length;
       const pref = state.days.has(weekday(s)) ? `<span class="pref">Preferred day</span>` : "";
-      html += `<tr class="day"><td colspan="${cols}">${fmtDayLong(day)}<span>${n} open</span>${pref}</td></tr>`;
+      html += `<tbody><tr class="day"><th colspan="${cols}" scope="rowgroup">${fmtDayLong(day)}<span>${n} open</span>${pref}</th></tr>`;
     }
     const c = crowd(s);
-    html += `<tr class="${c.key === "full" ? "full" : ""}">
-      <td class="time">${s.start} to ${s.end}</td><td>${pill(s.level)}</td><td>${s.wave}</td>
+    const full = c.key === "full";
+    html += `<tr class="slot${full ? " full" : ""}">
+      <td class="time">${s.start} to ${s.end}</td><td class="lvl">${pill(s.level)}</td><td class="wave">${s.wave}<span class="m"> wave</span></td>
       ${FORECAST ? `<td class="wxcell">${weatherHtml(s)}</td>` : ""}
-      <td class="crowdcell">${crowdHtml(c)}</td><td class="pricecell">${c.key === "full" ? "" : priceHtml(s)}</td>
-      <td class="bookcell">${c.key === "full" ? "" : `<a href="${BOOK_URL}" target="_blank" rel="noopener" aria-label="Book ${s.level}, ${fmtDay(s.date)} ${s.start}, ${s.wave} wave">Book ↗</a>`}</td></tr>`;
+      <td class="crowdcell">${crowdHtml(c)}</td><td class="pricecell">${full ? "" : priceHtml(s)}</td>
+      <td class="bookcell">${full ? "" : bookBtn(s)}</td></tr>`;
   }
   document.getElementById("table").innerHTML = html + `</tbody></table>`;
 }
@@ -544,10 +646,18 @@ function renderTable() {
 // The table header is rendered inside renderTable, so sync it after.
 function render() { save(); syncSettings(); renderProfile(); renderPicks(); renderTable(); syncToolbar(); }
 
-// Event delegation keeps buttons in place, so keyboard focus survives a click.
+// ---- settings dialog ----
 const dialog = document.getElementById("settings");
+function openSettings(first) {
+  dialog.classList.toggle("first", first);
+  document.getElementById("h-settings").textContent = first ? "Which levels do you surf?" : "Settings";
+  document.getElementById("settingsHint").textContent = first
+    ? "That's all to get started. Sorting and filters are on the page, and you can change this later under Settings."
+    : "Saved in this browser.";
+  dialog.showModal();
+}
 document.getElementById("profile").addEventListener("click", e => {
-  if (e.target.closest("#openSettings")) dialog.showModal();
+  if (e.target.closest("#openSettings")) openSettings(false);
 });
 document.getElementById("ladder").addEventListener("click", e => {
   const b = e.target.closest(".rung"); if (!b) return;
@@ -556,13 +666,20 @@ document.getElementById("ladder").addEventListener("click", e => {
 document.querySelectorAll("[data-setting]").forEach(seg => seg.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; state[seg.dataset.setting] = b.dataset.v; render();
 }));
-document.getElementById("weekdays").innerHTML = WEEKDAYS.map(d => `<button type="button" data-day="${d}">${d}</button>`).join("");
+document.getElementById("weekdays").innerHTML = WEEKDAYS.map(d => `<button type="button" class="toggle" data-day="${d}">${TICK}${d}</button>`).join("");
 document.getElementById("weekdays").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const d = b.dataset.day; state.days.has(d) ? state.days.delete(d) : state.days.add(d); render();
 });
-// Escape would close the dialog with no levels picked; keep it open until there is at least 1.
-dialog.addEventListener("cancel", e => { if (document.querySelector("#settings .primary").disabled) e.preventDefault(); });
+// Only explain the level requirement when someone tries to leave without 1.
+const needLevel = () => { document.getElementById("doneReason").textContent = "Pick at least 1 level to continue."; };
+dialog.querySelector("form").addEventListener("submit", e => {
+  if (!state.levels.size) { e.preventDefault(); needLevel(); return; }
+  hasSettings = true;
+});
+dialog.addEventListener("cancel", e => { if (!state.levels.size) { e.preventDefault(); needLevel(); } });
+
+// ---- sort and filters on the page ----
 document.querySelectorAll(".seg[data-key]").forEach(seg => seg.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; state[seg.dataset.key] = b.dataset.v; render();
 }));
@@ -571,9 +688,45 @@ document.getElementById("table").addEventListener("click", e => {
   const b = e.target.closest("[data-set]"); if (!b) return;
   const [k, v] = b.dataset.set.split(":"); state[k] = v; render();
 });
+document.getElementById("weatherPriority").hidden = !FORECAST;
+// Filters start open where there is room, folded on phones.
+document.getElementById("filters").open = matchMedia("(min-width: 761px)").matches;
 
+// ---- booking handoff ----
+// The booking site has no link to a single slot (it picks the week from a session),
+// so say exactly what to look for and offer to copy it.
+const handoff = document.getElementById("handoff");
+let handoffText = "";
+const mondayOf = d => { const x = new Date(d); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return x; };
+function openHandoff(s) {
+  const weeks = Math.round((mondayOf(s.date + "T12:00:00") - mondayOf(now)) / (7 * 864e5));
+  document.getElementById("slotSum").innerHTML = `
+    <dt>When</dt><dd>${fmtDayLong(s.date)}, ${s.start} to ${s.end}</dd>
+    <dt>Level</dt><dd>${pill(s.level)}</dd>
+    <dt>Wave</dt><dd>${s.wave}</dd>
+    <dt>Price</dt><dd>${priceHtml(s)}</dd>`;
+  document.getElementById("how").textContent = (weeks <= 0
+    ? "It's this week, so it's on the first page of the agenda."
+    : `It's ${weeks === 1 ? "next week" : `${weeks} weeks ahead`}, so move the agenda forward ${weeks} week${weeks === 1 ? "" : "s"}.`) +
+    ` Then find ${weekday(s)} ${s.start}, ${s.wave} wave.`;
+  handoffText = `Alaïa Bay: ${fmtDayLong(s.date)}, ${s.start} to ${s.end}, ${s.level}, ${s.wave} wave`;
+  document.getElementById("copyMsg").textContent = "";
+  handoff.showModal();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-book]"); if (!b) return;
+  const s = byId[b.dataset.book]; if (s) openHandoff(s);
+});
+document.getElementById("handoffClose").onclick = () => handoff.close();
+document.getElementById("copySlot").onclick = async () => {
+  const msg = document.getElementById("copyMsg");
+  try { await navigator.clipboard.writeText(handoffText); msg.textContent = "Copied"; }
+  catch (err) { msg.textContent = "Couldn't copy. The details are above."; }
+};
+
+// ---- freshness ----
 // On your computer (serve.py) you refresh by hand; the published copy updates on a schedule.
-const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+const isLocal = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(location.hostname);
 const ageH = (now - new Date(GENERATED_ISO)) / 36e5;
 // The schedule leaves a 14 h gap overnight, so only warn past that.
 const staleAfterH = isLocal ? 6 : 16;
@@ -584,6 +737,10 @@ stamp.textContent = `Data from ${GENERATED}` + (ageH > staleAfterH
 if (ageH > staleAfterH) stamp.classList.add("stale");
 document.getElementById("refresh").hidden = !isLocal;
 if (!isLocal) document.getElementById("refreshMsg").textContent = "Updates automatically around 07:00, 12:00 and 17:00.";
+if (FORECAST) document.getElementById("weatherCredit").textContent =
+  `Weather: MeteoSwiss open data, local forecast for ${FORECAST.point} issued ` +
+  `${new Date(FORECAST.issued).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}, ` +
+  "the same forecast the MeteoSwiss app shows.";
 
 // Refresh asks serve.py to rerun the scraper (about 1 minute), then reloads the page.
 document.getElementById("refresh").addEventListener("click", async e => {
@@ -605,8 +762,8 @@ document.getElementById("refresh").addEventListener("click", async e => {
 
 renderLadder();
 render();
-// First visit: ask for settings before showing anything personal.
-if (!hasSettings) dialog.showModal();
+// First visit: ask only for levels before showing anything personal.
+if (!hasSettings) openSettings(true);
 </script>
 </body>
 </html>
