@@ -1,89 +1,5 @@
 [
   {
-    "timeslot_id": 59577,
-    "date": "2026-10-27",
-    "start": "16:00",
-    "end": "17:00",
-    "wave": "Left",
-    "level": "Advanced Turn",
-    "price_category": "Free Surf",
-    "level_color": "#CCFCFF",
-    "sold_out": false,
-    "past": false,
-    "places_left": 7,
-    "products": []
-  },
-  {
-    "timeslot_id": 56192,
-    "date": "2026-10-27",
-    "start": "16:00",
-    "end": "17:00",
-    "wave": "Right",
-    "level": "Advanced Turn",
-    "price_category": "Free Surf",
-    "level_color": "#CCFCFF",
-    "sold_out": false,
-    "past": false,
-    "places_left": 4,
-    "products": []
-  },
-  {
-    "timeslot_id": 59578,
-    "date": "2026-10-27",
-    "start": "17:00",
-    "end": "18:00",
-    "wave": "Left",
-    "level": "Advanced Cruiser",
-    "price_category": "Free Surf",
-    "level_color": "#4BA42F",
-    "sold_out": false,
-    "past": false,
-    "places_left": 9,
-    "products": []
-  },
-  {
-    "timeslot_id": 56193,
-    "date": "2026-10-27",
-    "start": "17:00",
-    "end": "18:00",
-    "wave": "Right",
-    "level": "Advanced Cruiser",
-    "price_category": "Free Surf",
-    "level_color": "#4BA42F",
-    "sold_out": false,
-    "past": false,
-    "places_left": 8,
-    "products": []
-  },
-  {
-    "timeslot_id": 59579,
-    "date": "2026-10-27",
-    "start": "18:00",
-    "end": "19:00",
-    "wave": "Left",
-    "level": "Expert Turn",
-    "price_category": "Free Surf",
-    "level_color": "#5EA6F8",
-    "sold_out": false,
-    "past": false,
-    "places_left": 11,
-    "products": []
-  },
-  {
-    "timeslot_id": 56191,
-    "date": "2026-10-27",
-    "start": "18:00",
-    "end": "19:00",
-    "wave": "Right",
-    "level": "Expert Turn",
-    "price_category": "Free Surf",
-    "level_color": "#5EA6F8",
-    "sold_out": false,
-    "past": false,
-    "places_left": 5,
-    "products": []
-  },
-  {
     "timeslot_id": 60792,
     "date": "2026-10-28",
     "start": "11:00",
@@ -94,7 +10,7 @@
     "level_color": "#FFFFC7",
     "sold_out": false,
     "past": false,
-    "places_left": 6,
+    "places_left": 4,
     "products": [
       {
         "name": "1 Coached Session Kid",
@@ -117,7 +33,7 @@
     "level_color": "#FFFFC7",
     "sold_out": false,
     "past": false,
-    "places_left": 3,
+    "places_left": 4,
     "products": [
       {
         "name": "1 Coached Session Kid",
@@ -138,19 +54,10 @@
     "level": "Advanced Cruiser",
     "price_category": "Regular Price",
     "level_color": "#4BA42F",
-    "sold_out": false,
-    "past": false,
-    "places_left": 1,
-    "products": [
-      {
-        "name": "1 Guided Session Kid",
-        "price_chf": 109.0
-      },
-      {
-        "name": "1 Guided Session Adult",
-        "price_chf": 129.0
-      }
-    ]
+    "sold_out": true,
+    "past": true,
+    "places_left": 0,
+    "products": []
   },
   {
     "timeslot_id": 56196,
@@ -186,7 +93,7 @@
     "level_color": "#CCFCFF",
     "sold_out": false,
     "past": false,
-    "places_left": 8,
+    "places_left": 7,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -278,7 +185,7 @@
     "level_color": "#5EA6F8",
     "sold_out": false,
     "past": false,
-    "places_left": 9,
+    "places_left": 8,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -301,7 +208,7 @@
     "level_color": "#5EA6F8",
     "sold_out": false,
     "past": false,
-    "places_left": 5,
+    "places_left": 4,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -322,19 +229,10 @@
     "level": "Intermediate Cruiser",
     "price_category": "Regular Price",
     "level_color": "#3dff00",
-    "sold_out": false,
-    "past": false,
-    "places_left": 1,
-    "products": [
-      {
-        "name": "1 Coached Session Kid",
-        "price_chf": 129.0
-      },
-      {
-        "name": "1 Coached Session Adult",
-        "price_chf": 149.0
-      }
-    ]
+    "sold_out": true,
+    "past": true,
+    "places_left": 0,
+    "products": []
   },
   {
     "timeslot_id": 56198,
@@ -361,7 +259,7 @@
     "level_color": "#CCFCFF",
     "sold_out": false,
     "past": false,
-    "places_left": 9,
+    "places_left": 8,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -384,7 +282,7 @@
     "level_color": "#CCFCFF",
     "sold_out": false,
     "past": false,
-    "places_left": 9,
+    "places_left": 8,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -472,7 +370,7 @@
     "level_color": "#CCFCFF",
     "sold_out": false,
     "past": false,
-    "places_left": 4,
+    "places_left": 5,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -495,7 +393,7 @@
     "level_color": "#f6376f",
     "sold_out": false,
     "past": false,
-    "places_left": 7,
+    "places_left": 6,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -564,7 +462,7 @@
     "level_color": "#4BA42F",
     "sold_out": false,
     "past": false,
-    "places_left": 6,
+    "places_left": 4,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -835,19 +733,10 @@
     "level": "Expert Turn",
     "price_category": "Regular Price",
     "level_color": "#5EA6F8",
-    "sold_out": false,
-    "past": false,
-    "places_left": 1,
-    "products": [
-      {
-        "name": "1 Guided Session Kid",
-        "price_chf": 109.0
-      },
-      {
-        "name": "1 Guided Session Adult",
-        "price_chf": 129.0
-      }
-    ]
+    "sold_out": true,
+    "past": true,
+    "places_left": 0,
+    "products": []
   },
   {
     "timeslot_id": 56213,
@@ -911,7 +800,7 @@
     "level_color": "#4BA42F",
     "sold_out": false,
     "past": false,
-    "places_left": 4,
+    "places_left": 3,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -1109,7 +998,7 @@
     "level_color": "#5EA6F8",
     "sold_out": false,
     "past": false,
-    "places_left": 6,
+    "places_left": 5,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -1197,7 +1086,7 @@
     "level_color": "#000000",
     "sold_out": false,
     "past": false,
-    "places_left": 6,
+    "places_left": 5,
     "products": [
       {
         "name": "Pre-Competition Surf Session",
@@ -1254,7 +1143,7 @@
     "level_color": "#000000",
     "sold_out": false,
     "past": false,
-    "places_left": 33,
+    "places_left": 31,
     "products": [
       {
         "name": "Men's Registration",
@@ -1285,7 +1174,7 @@
     "level_color": "#000000",
     "sold_out": false,
     "past": false,
-    "places_left": 48,
+    "places_left": 47,
     "products": [
       {
         "name": "Men's Registration",
@@ -1362,7 +1251,7 @@
     "level_color": "#4BA42F",
     "sold_out": false,
     "past": false,
-    "places_left": 5,
+    "places_left": 4,
     "products": [
       {
         "name": "1 Guided Session Kid",
@@ -1585,7 +1474,7 @@
     "level_color": "#f6376f",
     "sold_out": false,
     "past": false,
-    "places_left": 5,
+    "places_left": 4,
     "products": [
       {
         "name": "Coached or Guided Session at CHF89",
