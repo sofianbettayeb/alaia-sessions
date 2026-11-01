@@ -1,89 +1,5 @@
 [
   {
-    "timeslot_id": 60722,
-    "date": "2026-10-31",
-    "start": "20:00",
-    "end": "21:00",
-    "wave": "Left",
-    "level": "Advanced Turn",
-    "price_category": "Regular Price",
-    "level_color": "#CCFCFF",
-    "sold_out": false,
-    "past": false,
-    "places_left": 6,
-    "products": []
-  },
-  {
-    "timeslot_id": 60723,
-    "date": "2026-10-31",
-    "start": "20:00",
-    "end": "21:00",
-    "wave": "Right",
-    "level": "Advanced Turn",
-    "price_category": "Regular Price",
-    "level_color": "#CCFCFF",
-    "sold_out": false,
-    "past": false,
-    "places_left": 8,
-    "products": []
-  },
-  {
-    "timeslot_id": 60727,
-    "date": "2026-11-01",
-    "start": "09:00",
-    "end": "10:00",
-    "wave": "Left",
-    "level": "Special",
-    "price_category": "Regular Price",
-    "level_color": "#000000",
-    "sold_out": false,
-    "past": false,
-    "places_left": 2,
-    "products": []
-  },
-  {
-    "timeslot_id": 60726,
-    "date": "2026-11-01",
-    "start": "09:00",
-    "end": "10:00",
-    "wave": "Right",
-    "level": "Special",
-    "price_category": "Regular Price",
-    "level_color": "#000000",
-    "sold_out": true,
-    "past": true,
-    "places_left": 0,
-    "products": []
-  },
-  {
-    "timeslot_id": 60731,
-    "date": "2026-11-01",
-    "start": "11:00",
-    "end": "12:00",
-    "wave": "Left",
-    "level": "Special",
-    "price_category": "Regular Price",
-    "level_color": "#000000",
-    "sold_out": false,
-    "past": false,
-    "places_left": 2,
-    "products": []
-  },
-  {
-    "timeslot_id": 60730,
-    "date": "2026-11-01",
-    "start": "11:00",
-    "end": "12:00",
-    "wave": "Right",
-    "level": "Special",
-    "price_category": "Regular Price",
-    "level_color": "#000000",
-    "sold_out": true,
-    "past": true,
-    "places_left": 0,
-    "products": []
-  },
-  {
     "timeslot_id": 60735,
     "date": "2026-11-01",
     "start": "12:00",
@@ -136,13 +52,8 @@
     "level_color": "#f6376f",
     "sold_out": false,
     "past": false,
-    "places_left": 9,
-    "products": [
-      {
-        "name": "Coached or Guided Session at CHF89",
-        "price_chf": 89.0
-      }
-    ]
+    "places_left": 6,
+    "products": []
   },
   {
     "timeslot_id": 60737,
@@ -153,10 +64,15 @@
     "level": "Rookie",
     "price_category": "Regular Price",
     "level_color": "#FFFFC7",
-    "sold_out": true,
-    "past": true,
-    "places_left": 0,
-    "products": []
+    "sold_out": false,
+    "past": false,
+    "places_left": 1,
+    "products": [
+      {
+        "name": "Coached or Guided Session at CHF89",
+        "price_chf": 89.0
+      }
+    ]
   },
   {
     "timeslot_id": 60736,
@@ -183,7 +99,7 @@
     "level_color": "#5EA6F8",
     "sold_out": false,
     "past": false,
-    "places_left": 3,
+    "places_left": 1,
     "products": [
       {
         "name": "Coached or Guided Session at CHF89",
